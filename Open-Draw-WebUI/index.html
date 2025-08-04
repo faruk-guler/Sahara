@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>OpenDraw WebUI v.1.1 - farukguler.com</title>
+        <title>OpenDraw WebUI v.2.7 - farukguler.com</title>
     <script src="jspdf.umd.min.js"></script>
     <script src="rough.min.js"></script>
     <style>
@@ -381,6 +381,13 @@
                     </svg>
                 </button>
                 
+                <button class="tool-btn" data-tool="text" title="Metin">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                        <line x1="9" y1="20" x2="15" y2="20"></line>
+                        <line x1="12" y1="4" x2="12" y2="20"></line>
+                    </svg>
+                </button>
                 <button class="tool-btn" data-tool="eraser" title="Silgi">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M16 2L21 7L11 17L6 12L16 2Z" />
@@ -459,7 +466,7 @@
                 </button>
             </div>
             <div class="tool-group app-title">
-                OpenDraw WebUI v.1.1
+                OpenDraw WebUI v.2.7
             </div>
         </div>
 
@@ -533,11 +540,13 @@
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
                     </svg>
                 `;
-                this.moonIconSVG = `
+                                this.moonIconSVG = `
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
                     </svg>
                 `;
+
+                this.init();
 
                 this.init();
             }
@@ -588,7 +597,8 @@
                 // Keyboard events for panning and shortcuts
                 document.addEventListener('keydown', (e) => {
                     this.keys[e.code] = true;
-                    if (e.code === 'Space') {
+                    // Prevent spacebar from panning when a text input is focused
+                    if (e.code === 'Space' && document.activeElement !== this.textInput) {
                         e.preventDefault();
                         this.canvas.style.cursor = 'grab';
                     }
@@ -652,9 +662,12 @@
                 document.getElementById('strokeColor').addEventListener('change', (e) => {
                     if (this.selectedElement) {
                         this.selectedElement.strokeColor = e.target.value;
+                        // If we are currently editing a text element, update the textarea color in real-time.
+                        if (this.selectedElement.type === 'text' && this.textInput.style.display === 'block') {
+                            this.textInput.style.color = e.target.value;
+                        }
                         this.redraw();
                         this.saveState();
-                        this.updatePropertiesPanel();
                     }
                 });
 
@@ -663,16 +676,16 @@
                         this.selectedElement.fillColor = e.target.value;
                         this.redraw();
                         this.saveState();
-                        this.updatePropertiesPanel();
                     }
                 });
 
                 document.getElementById('strokeWidth').addEventListener('input', (e) => {
                     if (this.selectedElement) {
-                        this.selectedElement.strokeWidth = parseInt(e.target.value);
+                        const newStrokeWidth = parseInt(e.target.value);
+                        // For all elements, including text, this slider now controls strokeWidth
+                        this.selectedElement.strokeWidth = newStrokeWidth;
                         this.redraw();
                         this.saveState();
-                        this.updatePropertiesPanel();
                     }
                 });
 
@@ -737,10 +750,9 @@
                         fillColorInput.value = this.selectedElement.fillColor || '#ffffff';
                     }
 
-                    strokeWidthInput.disabled = isText;
-                    if (!strokeWidthInput.disabled) {
-                        strokeWidthInput.value = this.selectedElement.strokeWidth || 1;
-                    }
+                    strokeWidthInput.disabled = false; // Always enable for text thickness or stroke width
+                    strokeWidthInput.value = this.selectedElement.strokeWidth || 1;
+
                 } else {
                     // When nothing is selected, ensure the toolbars are enabled for the next drawing.
                     fillColorInput.disabled = false;
@@ -758,9 +770,10 @@
             handleMouseDown(e) {
                 if (this.isPanning) return;
 
-                // Check if text input is active and the click is not on the text input itself
+                // If text input is active, a click outside of it should finalize it and do nothing else.
                 if (this.textInput.style.display === 'block' && e.target !== this.textInput) {
                     this.finishTextInput();
+                    return; // Prevent this click from starting a new action.
                 }
                 
                 const pos = this.getMousePos(e);
@@ -773,6 +786,9 @@
                     if (this.selectedElement && handleType) {
                         this.isResizing = true;
                         this.resizeHandle = handleType;
+                        if (this.selectedElement.type === 'text') {
+                            this.selectedElement.initialFontSize = this.selectedElement.fontSize;
+                        }
                         this.initialBounds = {
                             x: this.selectedElement.x,
                             y: this.selectedElement.y,
@@ -812,58 +828,74 @@
 
                 if (this.currentTool === 'select' && this.selectedElement) {
                     if (this.isResizing) {
-                        const dx = pos.x - this.startX;
-                        const dy = pos.y - this.startY;
+                        if (this.selectedElement.type === 'text') {
+                            const dx = pos.x - this.startX;
+                            const dy = pos.y - this.startY;
+                            const initialFontSize = this.selectedElement.initialFontSize || this.selectedElement.fontSize;
 
-                        let newX = this.initialBounds.x;
-                        let newY = this.initialBounds.y;
-                        let newWidth = this.initialBounds.width;
-                        let newHeight = this.initialBounds.height;
+                            // Use the larger of the horizontal or vertical drag to determine new size
+                            const sizeChange = Math.abs(dx) > Math.abs(dy) ? dx : dy;
+                            let newFontSize = initialFontSize + (sizeChange / 2); // Adjust sensitivity
+                            
+                            if (newFontSize < 4) newFontSize = 4; // Set a minimum font size
+                            if (newFontSize > 512) newFontSize = 512; // Set a maximum font size
 
-                        switch (this.resizeHandle) {
-                            case 'tl':
-                                newX = this.initialBounds.x + dx;
-                                newY = this.initialBounds.y + dy;
-                                newWidth = this.initialBounds.width - dx;
-                                newHeight = this.initialBounds.height - dy;
-                                break;
-                            case 'tm':
-                                newY = this.initialBounds.y + dy;
-                                newHeight = this.initialBounds.height - dy;
-                                break;
-                            case 'tr':
-                                newY = this.initialBounds.y + dy;
-                                newWidth = this.initialBounds.width + dx;
-                                newHeight = this.initialBounds.height - dy;
-                                break;
-                            case 'ml':
-                                newX = this.initialBounds.x + dx;
-                                newWidth = this.initialBounds.width - dx;
-                                break;
-                            case 'mr':
-                                newWidth = this.initialBounds.width + dx;
-                                break;
-                            case 'bl':
-                                newX = this.initialBounds.x + dx;
-                                newWidth = this.initialBounds.width - dx;
-                                newHeight = this.initialBounds.height + dy;
-                                break;
-                            case 'bm':
-                                newHeight = this.initialBounds.height + dy;
-                                break;
-                            case 'br':
-                                newWidth = this.initialBounds.width + dx;
-                                newHeight = this.initialBounds.height + dy;
-                                break;
+                            this.selectedElement.fontSize = newFontSize;
+
+                        } else {
+                            const dx = pos.x - this.startX;
+                            const dy = pos.y - this.startY;
+
+                            let newX = this.initialBounds.x;
+                            let newY = this.initialBounds.y;
+                            let newWidth = this.initialBounds.width;
+                            let newHeight = this.initialBounds.height;
+
+                            switch (this.resizeHandle) {
+                                case 'tl':
+                                    newX = this.initialBounds.x + dx;
+                                    newY = this.initialBounds.y + dy;
+                                    newWidth = this.initialBounds.width - dx;
+                                    newHeight = this.initialBounds.height - dy;
+                                    break;
+                                case 'tm':
+                                    newY = this.initialBounds.y + dy;
+                                    newHeight = this.initialBounds.height - dy;
+                                    break;
+                                case 'tr':
+                                    newY = this.initialBounds.y + dy;
+                                    newWidth = this.initialBounds.width + dx;
+                                    newHeight = this.initialBounds.height - dy;
+                                    break;
+                                case 'ml':
+                                    newX = this.initialBounds.x + dx;
+                                    newWidth = this.initialBounds.width - dx;
+                                    break;
+                                case 'mr':
+                                    newWidth = this.initialBounds.width + dx;
+                                    break;
+                                case 'bl':
+                                    newX = this.initialBounds.x + dx;
+                                    newWidth = this.initialBounds.width - dx;
+                                    newHeight = this.initialBounds.height + dy;
+                                    break;
+                                case 'bm':
+                                    newHeight = this.initialBounds.height + dy;
+                                    break;
+                                case 'br':
+                                    newWidth = this.initialBounds.width + dx;
+                                    newHeight = this.initialBounds.height + dy;
+                                    break;
+                            }
+
+                            if (newWidth < 10) newWidth = 10;
+                            if (newHeight < 10) newHeight = 10;
+
+                            this.selectedElement.x = newX;
+                            this.selectedElement.y = newY;
+                            this.selectedElement.width = newWidth;
+                            this.selectedElement.height = newHeight;
                         }
-
-                        if (newWidth < 10) newWidth = 10;
-                        if (newHeight < 10) newHeight = 10;
-
-                        this.selectedElement.x = newX;
-                        this.selectedElement.y = newY;
-                        this.selectedElement.width = newWidth;
-                        this.selectedElement.height = newHeight;
 
                         this.redraw();
                     } else { // Dragging selected element
@@ -914,7 +946,12 @@
                     this.saveState();
                 } else if (this.currentTool === 'select' && this.selectedElement) {
                     if(this.isResizing) {
-                        this.normalizeElement(this.selectedElement);
+                        if (this.selectedElement.type === 'text') {
+                            delete this.selectedElement.initialFontSize;
+                            this.updateToolbarsOnSelection(); // Update slider to match new font size
+                        } else {
+                            this.normalizeElement(this.selectedElement);
+                        }
                     }
                     this.saveState();
                     this.isResizing = false;
@@ -998,9 +1035,11 @@
                     element.image = new Image(); // Will be loaded later
                 } else if (type === 'text') {
                     element.text = textContent;
-                    element.fontSize = 16; // Default font size
-                    element.fontFamily = 'Arial';
-                    element.fillColor = 'transparent'; // Text doesn't have a fill
+                    element.fontSize = 16; // Start with a default size
+                    element.strokeWidth = strokeWidth; // Get thickness from the slider
+                    element.fontFamily = 'cursive';
+                    element.strokeColor = document.getElementById('strokeColor').value;
+                    element.fillColor = 'transparent';
                     element.width = 0; // Calculated dynamically
                     element.height = 0; // Calculated dynamically
                 }
@@ -1106,7 +1145,7 @@
             }
 
             getHandleAt(x, y, element) {
-                if (!element || element.type === 'pen' || element.type === 'text') return null;
+                if (!element || element.type === 'pen') return null;
                 const { x: elX, y: elY, width: elW, height: elH } = element;
                 const handles = {
                     tl: { x: elX, y: elY },
@@ -1151,8 +1190,10 @@
             }
 
             drawElement(element) {
-                const ctx = this.ctx;
-                const rc = this.rc;
+                this._drawElementInternal(element, this.ctx, this.rc);
+            }
+
+            _drawElementInternal(element, ctx, rc) {
                 const { type, x, y, width, height, strokeColor, fillColor, strokeWidth } = element;
 
                 const roughOptions = {
@@ -1221,11 +1262,13 @@
                         break;
                     case 'text':
                         ctx.fillStyle = element.strokeColor;
-                        ctx.font = `normal normal ${element.fontSize}px ${element.fontFamily}`;
+                        ctx.font = `${element.fontSize}px ${element.fontFamily}`;
                         ctx.textAlign = 'left';
+                        ctx.lineWidth = element.strokeWidth;
+                        
                         const textLines = element.text.split('\n');
-                        let maxWidth = 0;
                         const lineHeight = element.fontSize * 1.2;
+                        let maxWidth = 0;
 
                         textLines.forEach(line => {
                             const textWidth = ctx.measureText(line).width;
@@ -1238,6 +1281,7 @@
                         element.height = textLines.length * lineHeight;
 
                         textLines.forEach((line, index) => {
+                            ctx.strokeText(line, element.x, element.y + (index * lineHeight) + element.fontSize);
                             ctx.fillText(line, element.x, element.y + (index * lineHeight) + element.fontSize);
                         });
                         break;
@@ -1277,7 +1321,7 @@
                 ctx.strokeRect(outlineX, outlineY, outlineWidth, outlineHeight);
                 ctx.setLineDash([]);
 
-                if (type !== 'pen' && type !== 'text') {
+                if (type !== 'pen') {
                     const handleSize = 8 / this.zoomLevel;
                     ctx.fillStyle = '#3b82f6';
                     ctx.strokeStyle = 'white';
@@ -1370,8 +1414,9 @@
 
             // Text input handling
             startTextInput(x, y) {
-                const fontSize = 16; // Keep a default for creation
-                const fontFamily = 'Arial';
+                const strokeWidth = parseInt(document.getElementById('strokeWidth').value);
+                const fontSize = 16; // Default font size
+                const fontFamily = 'cursive';
                 const color = document.getElementById('strokeColor').value;
 
                 this.textInput.style.display = 'block';
@@ -1386,6 +1431,7 @@
 
                 this.currentElement = this.createElement('text', x, y, 0, 0, '');
                 this.currentElement.fontSize = fontSize;
+                this.currentElement.strokeWidth = strokeWidth;
                 this.currentElement.fontFamily = fontFamily;
                 this.currentElement.strokeColor = color;
                 this.selectedElement = this.currentElement;
@@ -1472,272 +1518,172 @@
                     document.body.appendChild(downloadAnchorNode);
                     downloadAnchorNode.click();
                     downloadAnchorNode.remove();
-                } else {
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = this.canvas.width;
-                    tempCanvas.height = this.canvas.height;
-                    const tempCtx = tempCanvas.getContext('2d');
-                    const tempRc = rough.canvas(tempCanvas);
+                    return;
+                }
 
-                    tempCtx.translate(this.offsetX, this.offsetY);
-                    tempCtx.scale(this.zoomLevel, this.zoomLevel);
+                if (format === 'svg') {
+                    let svgElements = [];
+                    const svgContainer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    const roughSvg = rough.svg(svgContainer);
 
                     this.elements.forEach(element => {
-                        this.drawElementExport.call({ ctx: tempCtx, rc: tempRc, roughness: this.roughness }, element);
-                    });
-                    
-                    tempCtx.setTransform(1, 0, 0, 1, 0, 0);
+                        const { type, x, y, width, height, strokeColor, fillColor, strokeWidth } = element;
+                        const o = {
+                            stroke: strokeColor,
+                            fill: fillColor === 'transparent' ? 'none' : fillColor,
+                            strokeWidth: strokeWidth,
+                            roughness: this.roughness,
+                            fillStyle: (fillColor === '#ffffff' || fillColor === 'transparent') ? 'hachure' : 'solid'
+                        };
 
-                    if (format === 'png' || format === 'jpg') {
-                        const imageData = tempCanvas.toDataURL(`image/${format}`, format === 'jpg' ? 0.9 : 1.0);
-                        const a = document.createElement('a');
-                        a.href = imageData;
-                        a.download = `drawing.${format}`;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                    } else if (format === 'pdf') {
-                        const { jsPDF } = window.jspdf;
-                        const pdf = new jsPDF('landscape', 'px', [tempCanvas.width, tempCanvas.height]);
-                        pdf.addImage(tempCanvas.toDataURL('image/png'), 'PNG', 0, 0, tempCanvas.width, tempCanvas.height);
-                        pdf.save("drawing.pdf");
-                    } else if (format === 'svg') {
-                        let svgElements = [];
-                        const roughSvg = rough.svg(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
+                        let el;
+                        switch(element.type) {
+                            case 'rectangle':
+                                el = roughSvg.rectangle(x, y, width, height, o);
+                                break;
+                            case 'circle':
+                                el = roughSvg.ellipse(x + width / 2, y + height / 2, width, height, o);
+                                break;
+                            case 'line':
+                                el = roughSvg.line(x, y, x + width, y + height, o);
+                                break;
+                            case 'triangle':
+                                 el = roughSvg.polygon([
+                                    [x + width / 2, y],
+                                    [x, y + height],
+                                    [x + width, y + height]
+                                ], o);
+                                break;
+                            case 'pen':
+                                if (element.path && element.path.length > 1) {
+                                    const pathData = rough.generator().toPaths(this.rc.linearPath(element.path.map(p => [p.x, p.y]), o));
+                                    el = roughSvg.path(pathData[0].d, o);
+                                }
+                                break;
+                            case 'arrow':
+                                const arrowLine = roughSvg.line(x, y, x + width, y + height, o);
+                                const angle = Math.atan2(height, width);
+                                const size = element.arrowheadSize || 10;
+                                const x2 = x + width;
+                                const y2 = y + height;
+                                const p1 = [ x2 - size * Math.cos(angle - Math.PI / 6), y2 - size * Math.sin(angle - Math.PI / 6) ];
+                                const p2 = [x2, y2];
+                                const p3 = [ x2 - size * Math.cos(angle + Math.PI / 6), y2 - size * Math.sin(angle + Math.PI / 6) ];
+                                const arrowhead = roughSvg.polygon([p1, p2, p3], o);
+                                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                                g.appendChild(arrowLine);
+                                g.appendChild(arrowhead);
+                                el = g;
+                                break;
+                            case 'cylinder':
+                                const ellipseRadiusX_svg = Math.abs(width) / 2;
+                                const ellipseRadiusY_svg = Math.abs(height) / 8;
+                                const topEllipseY_svg = y + ellipseRadiusY_svg;
+                                const bottomEllipseY_svg = y + height - ellipseRadiusY_svg;
 
-                        this.elements.forEach(element => {
-                            const { type, x, y, width, height, strokeColor, fillColor, strokeWidth } = element;
-                            const o = {
-                                stroke: strokeColor,
-                                fill: fillColor === 'transparent' ? 'none' : fillColor,
-                                strokeWidth: strokeWidth,
-                                roughness: this.roughness,
-                                fillStyle: (fillColor === '#ffffff' || fillColor === 'transparent') ? 'hachure' : 'solid'
-                            };
+                                const topEllipse = roughSvg.ellipse(x + width / 2, topEllipseY_svg, width, ellipseRadiusY_svg * 2, o);
+                                const bottomArcPath = `M ${x},${bottomEllipseY_svg} A ${ellipseRadiusX_svg},${ellipseRadiusY_svg} 0 0 1 ${x + width},${bottomEllipseY_svg}`;
+                                const bottomHalfEllipse = roughSvg.path(bottomArcPath, {...o, fill: 'none'});
+                                const leftLine = roughSvg.line(x, topEllipseY_svg, x, bottomEllipseY_svg, o);
+                                const rightLine = roughSvg.line(x + width, topEllipseY_svg, x + width, bottomEllipseY_svg, o);
+                                
+                                const cylGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                               cylGroup.appendChild(leftLine);
+                               cylGroup.appendChild(rightLine);
+                               cylGroup.appendChild(bottomHalfEllipse);
+                               cylGroup.appendChild(topEllipse);
+                                el = cylGroup;
+                                break;
+                            case 'cloud':
+                                const cloudPath = `M ${x + width * 0.2} ${y + height * 0.7} C ${x - width * 0.1} ${y + height * 0.9}, ${x + width * 0.1} ${y + height * 0.3}, ${x + width * 0.4} ${y + height * 0.2} C ${x + width * 0.8} ${y - height * 0.1}, ${x + width * 1.1} ${y + height * 0.2}, ${x + width * 0.9} ${y + height * 0.5} C ${x + width * 1.2} ${y + height * 0.8}, ${x + width * 0.8} ${y + height * 1.1}, ${x + width * 0.5} ${y + height * 0.9} C ${x + width * 0.2} ${y + height * 1.1}, ${x + width * 0.0} ${y + height * 0.9}, ${x + width * 0.2} ${y + height * 0.7} Z`;
+                                el = roughSvg.path(cloudPath, o);
+                                break;
+                            case 'text':
+                                const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                                textEl.setAttribute('x', x);
+                                textEl.setAttribute('y', y + element.fontSize);
+                                textEl.setAttribute('font-family', element.fontFamily);
+                                textEl.setAttribute('font-size', element.fontSize);
+                                textEl.setAttribute('stroke', element.strokeColor);
+                                textEl.setAttribute('stroke-width', element.strokeWidth);
+                                textEl.setAttribute('fill', element.strokeColor);
+                                textEl.style.whiteSpace = 'pre';
 
-                            let el;
-                            switch(element.type) {
-                                case 'rectangle':
-                                    el = roughSvg.rectangle(x, y, width, height, o);
-                                    break;
-                                case 'circle':
-                                    el = roughSvg.ellipse(x + width / 2, y + height / 2, width, height, o);
-                                    break;
-                                case 'line':
-                                    el = roughSvg.line(x, y, x + width, y + height, o);
-                                    break;
-                                case 'triangle':
-                                     el = roughSvg.polygon([
-                                        [x + width / 2, y],
-                                        [x, y + height],
-                                        [x + width, y + height]
-                                    ], o);
-                                    break;
-                                case 'pen':
-                                    if (element.path && element.path.length > 1) {
-                                        el = roughSvg.path(rough.generator().toPaths(rc.linearPath(element.path, {...o, stroke: 'none'})), o);
-                                    }
-                                    break;
-                                case 'arrow':
-                                    const arrowLine = roughSvg.line(x, y, x + width, y + height, o);
-                                    const angle = Math.atan2(height, width);
-                                    const size = element.arrowheadSize || 10;
-                                    const x2 = x + width;
-                                    const y2 = y + height;
-                                    const p1 = [
-                                        x2 - size * Math.cos(angle - Math.PI / 6),
-                                        y2 - size * Math.sin(angle - Math.PI / 6)
-                                    ];
-                                    const p2 = [x2, y2];
-                                    const p3 = [
-                                        x2 - size * Math.cos(angle + Math.PI / 6),
-                                        y2 - size * Math.sin(angle + Math.PI / 6)
-                                    ];
-                                    const arrowhead = roughSvg.polygon([p1, p2, p3], o);
-                                    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                                    g.appendChild(arrowLine);
-                                    g.appendChild(arrowhead);
-                                    el = g;
-                                    break;
-                                case 'cylinder':
-                                    const ellipseRadiusX_svg = Math.abs(width) / 2;
-                                    const ellipseRadiusY_svg = Math.abs(height) / 8;
-                                    const topEllipseY_svg = y + ellipseRadiusY_svg;
-                                    const bottomEllipseY_svg = y + height - ellipseRadiusY_svg;
-
-                                    const topEllipse = roughSvg.ellipse(x + width / 2, topEllipseY_svg, width, ellipseRadiusY_svg * 2, o);
-                                    const bottomArcPath = `M ${x},${bottomEllipseY_svg} A ${ellipseRadiusX_svg},${ellipseRadiusY_svg} 0 0 1 ${x + width},${bottomEllipseY_svg}`;
-                                    const bottomHalfEllipse = roughSvg.path(bottomArcPath, {...o, fill: 'none'});
-                                    const leftLine = roughSvg.line(x, topEllipseY_svg, x, bottomEllipseY_svg, o);
-                                    const rightLine = roughSvg.line(x + width, topEllipseY_svg, x + width, bottomEllipseY_svg, o);
-                                    
-                                    const cylGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                                    // Draw order is important for correct appearance
-                                    cylGroup.appendChild(leftLine);
-                                    cylGroup.appendChild(rightLine);
-                                    cylGroup.appendChild(bottomHalfEllipse);
-                                    cylGroup.appendChild(topEllipse); // Draw top ellipse last so it covers the back of the lines
-                                    el = cylGroup;
-                                    break;
-                                case 'cloud':
-                                    const cloudPath = `M ${x + width * 0.2} ${y + height * 0.7} C ${x - width * 0.1} ${y + height * 0.9}, ${x + width * 0.1} ${y + height * 0.3}, ${x + width * 0.4} ${y + height * 0.2} C ${x + width * 0.8} ${y - height * 0.1}, ${x + width * 1.1} ${y + height * 0.2}, ${x + width * 0.9} ${y + height * 0.5} C ${x + width * 1.2} ${y + height * 0.8}, ${x + width * 0.8} ${y + height * 1.1}, ${x + width * 0.5} ${y + height * 0.9} C ${x + width * 0.2} ${y + height * 1.1}, ${x + width * 0.0} ${y + height * 0.9}, ${x + width * 0.2} ${y + height * 0.7} Z`;
-                                    el = roughSvg.path(cloudPath, o);
-                                    break;
-                                case 'text':
-                                    const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                                    textEl.setAttribute('x', x);
-                                    textEl.setAttribute('y', y);
-                                    textEl.setAttribute('font-family', element.fontFamily);
-                                    textEl.setAttribute('font-size', element.fontSize);
-                                    textEl.setAttribute('fill', element.strokeColor);
-                                    textEl.style.whiteSpace = 'pre';
-
-                                    const textLines = element.text.split('\n');
-                                    const lineHeight = element.fontSize * 1.2;
-                                    textLines.forEach((line, index) => {
+                                const textLines = element.text.split('\n');
+                                const lineHeight = element.fontSize * 1.2;
+                                textLines.forEach((line, index) => {
+                                    if (index > 0) {
                                         const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
                                         tspan.setAttribute('x', x);
-                                        tspan.setAttribute('dy', index === 0 ? element.fontSize : lineHeight);
+                                        tspan.setAttribute('dy', lineHeight);
                                         tspan.textContent = line;
                                         textEl.appendChild(tspan);
-                                    });
-                                    el = textEl;
-                                    break;
-                                case 'image':
-                                    if (element.src) {
-                                        const imageEl = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-                                        imageEl.setAttribute('href', element.src);
-                                        imageEl.setAttribute('x', x);
-                                        imageEl.setAttribute('y', y);
-                                        imageEl.setAttribute('width', width);
-                                        imageEl.setAttribute('height', height);
-                                        el = imageEl;
+                                    } else {
+                                        textEl.textContent = line;
                                     }
-                                    break;
-                            }
-                            if (el) {
-                                svgElements.push(el.outerHTML);
-                            }
-                        });
+                                });
+                                el = textEl;
+                                break;
+                            case 'image':
+                                if (element.src) {
+                                    const imageEl = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+                                    imageEl.setAttribute('href', element.src);
+                                    imageEl.setAttribute('x', x);
+                                    imageEl.setAttribute('y', y);
+                                    imageEl.setAttribute('width', width);
+                                    imageEl.setAttribute('height', height);
+                                    el = imageEl;
+                                }
+                                break;
+                        }
+                        if (el) {
+                            svgContainer.appendChild(el);
+                        }
+                    });
 
-                        const svgContent = `<svg width="${this.canvas.width}" height="${this.canvas.height}" viewBox="0 0 ${this.canvas.width} ${this.canvas.height}" xmlns="http://www.w3.org/2000/svg"><g transform="translate(${this.offsetX} ${this.offsetY}) scale(${this.zoomLevel})">${svgElements.join('')}</g></svg>`;
+                    const svgContent = `<svg width="${this.canvas.width}" height="${this.canvas.height}" viewBox="0 0 ${this.canvas.width} ${this.canvas.height}" xmlns="http://www.w3.org/2000/svg"><g transform="translate(${this.offsetX} ${this.offsetY}) scale(${this.zoomLevel})">${svgContainer.innerHTML}</g></svg>`;
 
-                        const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'drawing.svg';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    }
+                    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'drawing.svg';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    return;
                 }
-            }
-            
-            drawElementExport(element) {
-                const ctx = this.ctx;
-                const rc = this.rc;
-                const { type, x, y, width, height, strokeColor, fillColor, strokeWidth } = element;
 
-                 const roughOptions = {
-                    stroke: strokeColor,
-                    fill: (element.type === 'text' || fillColor === 'transparent') ? 'none' : fillColor,
-                    strokeWidth: strokeWidth,
-                    roughness: this.roughness,
-                    fillStyle: (fillColor === '#ffffff' || fillColor === 'transparent' || element.type === 'text') ? 'hachure' : 'solid'
-                };
+                // For PNG, JPG, PDF
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = this.canvas.width;
+                tempCanvas.height = this.canvas.height;
+                const tempRc = rough.canvas(tempCanvas);
 
-                switch (type) {
-                    case 'rectangle':
-                        rc.rectangle(x, y, width, height, roughOptions);
-                        break;
-                    case 'circle':
-                        rc.ellipse(x + width / 2, y + height / 2, width, height, roughOptions);
-                        break;
-                    case 'line':
-                        rc.line(x, y, x + width, y + height, roughOptions);
-                        break;
-                    case 'triangle':
-                        rc.polygon([
-                            [x + width / 2, y],
-                            [x, y + height],
-                            [x + width, y + height]
-                        ], roughOptions);
-                        break;
-                    case 'cylinder':
-                        const ellipseRadiusX = Math.abs(width) / 2;
-                        const ellipseRadiusY = Math.abs(height) / 8;
-                        const topEllipseCenterY = y + ellipseRadiusY;
-                        const bottomEllipseCenterY = y + height - ellipseRadiusY;
+                tempCtx.translate(this.offsetX, this.offsetY);
+                tempCtx.scale(this.zoomLevel, this.zoomLevel);
 
-                        // Draw the two vertical side lines
-                        rc.line(x, topEllipseCenterY, x, bottomEllipseCenterY, roughOptions);
-                        rc.line(x + width, topEllipseCenterY, x + width, bottomEllipseCenterY, roughOptions);
+                this.elements.forEach(element => {
+                    this._drawElementInternal(element, tempCtx, tempRc);
+                });
+                
+                tempCtx.setTransform(1, 0, 0, 1, 0, 0);
 
-                        // Draw the bottom arc (convex)
-                        const bottomArcPath = `M ${x} ${bottomEllipseCenterY} A ${ellipseRadiusX} ${ellipseRadiusY} 0 0 1 ${x + width} ${bottomEllipseCenterY}`;
-                        rc.path(bottomArcPath, { ...roughOptions, fill: 'none' });
-
-                        // Draw the top ellipse (filled, will cover the back of the lines)
-                        rc.ellipse(x + width / 2, topEllipseCenterY, width, ellipseRadiusY * 2, roughOptions);
-                        break;
-                    case 'cloud':
-                        const cloudPath = `M ${x + width * 0.2} ${y + height * 0.7} C ${x - width * 0.1} ${y + height * 0.9}, ${x + width * 0.1} ${y + height * 0.3}, ${x + width * 0.4} ${y + height * 0.2} C ${x + width * 0.8} ${y - height * 0.1}, ${x + width * 1.1} ${y + height * 0.2}, ${x + width * 0.9} ${y + height * 0.5} C ${x + width * 1.2} ${y + height * 0.8}, ${x + width * 0.8} ${y + height * 1.1}, ${x + width * 0.5} ${y + height * 0.9} C ${x + width * 0.2} ${y + height * 1.1}, ${x + width * 0.0} ${y + height * 0.9}, ${x + width * 0.2} ${y + height * 0.7} Z`;
-                        rc.path(cloudPath, roughOptions);
-                        break;
-                    case 'arrow':
-                        rc.line(x, y, x + width, y + height, roughOptions);
-                        const angle = Math.atan2(height, width);
-                        const size = element.arrowheadSize || 10;
-                        const x2 = x + width;
-                        const y2 = y + height;
-                        const p1 = [ x2 - size * Math.cos(angle - Math.PI / 6), y2 - size * Math.sin(angle - Math.PI / 6) ];
-                        const p2 = [x2, y2];
-                        const p3 = [ x2 - size * Math.cos(angle + Math.PI / 6), y2 - size * Math.sin(angle + Math.PI / 6) ];
-                        rc.polygon([p1, p2, p3], roughOptions);
-                        break;
-                    case 'pen':
-                        if (element.path && element.path.length > 1) {
-                            const points = element.path.map(p => [p.x, p.y]);
-                            const drawable = rough.generator().linearPath(points, roughOptions);
-                            rc.draw(drawable);
-                        }
-                        break;
-                    case 'text':
-                        ctx.fillStyle = element.strokeColor;
-                        ctx.font = `normal normal ${element.fontSize}px ${element.fontFamily}`;
-                        ctx.textAlign = 'left';
-                        const textLines = element.text.split('\n');
-                        let maxWidth = 0;
-                        const lineHeight = element.fontSize * 1.2;
-
-                        textLines.forEach(line => {
-                            const textWidth = ctx.measureText(line).width;
-                            if (textWidth > maxWidth) {
-                                maxWidth = textWidth;
-                            }
-                        });
-
-                        element.width = maxWidth;
-                        element.height = textLines.length * lineHeight;
-
-                        textLines.forEach((line, index) => {
-                            ctx.fillText(line, element.x, element.y + (index * lineHeight) + element.fontSize);
-                        });
-                        break;
-                    case 'image':
-                        if (element.image && element.image.complete && element.image.naturalWidth !== 0) {
-                            ctx.drawImage(element.image, x, y, width, height);
-                        } else if (element.src) {
-                            // For export, we need to ensure the image is loaded.
-                            const img = new Image();
-                            img.src = element.src;
-                            if (img.complete) {
-                                ctx.drawImage(img, x, y, width, height);
-                            }
-                        }
-                        break;
+                const imageData = tempCanvas.toDataURL(`image/${format === 'jpg' ? 'jpeg' : 'png'}`, 1.0);
+                if (format === 'pdf') {
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [tempCanvas.width, tempCanvas.height] });
+                    pdf.addImage(imageData, 'PNG', 0, 0, tempCanvas.width, tempCanvas.height);
+                    pdf.save("drawing.pdf");
+                } else {
+                    const a = document.createElement('a');
+                    a.href = imageData;
+                    a.download = `drawing.${format}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
                 }
             }
 
