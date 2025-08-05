@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>OpenDraw WebUI v.2.7 - farukguler.com</title>
+        <title>OpenDraw WebUI v.2.10 -farukguler.com</title>
     <script src="jspdf.umd.min.js"></script>
     <script src="rough.min.js"></script>
     <style>
@@ -99,6 +99,9 @@
             font-weight: bold;
             font-size: 1.2em;
             color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .tool-group {
@@ -332,63 +335,57 @@
     <div class="container">
         <div class="toolbar">
             <div class="tool-group">
-                <button class="tool-btn active" data-tool="select" title="Seç">
+                <button class="tool-btn active" data-tool="select" title="Select">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
                     </svg>
                 </button>
-                <button class="tool-btn" data-tool="rectangle" title="Dikdörtgen">
+                <button class="tool-btn" data-tool="rectangle" title="Rectangle">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                     </svg>
                 </button>
-                <button class="tool-btn" data-tool="circle" title="Daire">
+                <button class="tool-btn" data-tool="circle" title="Circle">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                     </svg>
                 </button>
-                <button class="tool-btn" data-tool="line" title="Çizgi">
+                <button class="tool-btn" data-tool="line" title="Line">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M5 12h14"/>
                     </svg>
                 </button>
-                <button class="tool-btn" data-tool="triangle" title="Üçgen">
+                <button class="tool-btn" data-tool="triangle" title="Triangle">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                     </svg>
                 </button>
-                <button class="tool-btn" data-tool="cylinder" title="Veritabanı">
+                <button class="tool-btn" data-tool="cylinder" title="Database">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <ellipse cx="12" cy="5" rx="9" ry="3"/>
                         <path d="M3 5v14a9 3 0 0 0 18 0V5"/>
                     </svg>
                 </button>
-                <button class="tool-btn" data-tool="cloud" title="Bulut">
+                <button class="tool-btn" data-tool="cloud" title="Cloud">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
                     </svg>
                 </button>
                 
-                <button class="tool-btn" data-tool="arrow" title="Ok">
+                <button class="tool-btn" data-tool="arrow" title="Arrow">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M5 12h14"/>
                         <path d="M12 5l7 7-7 7"/>
                     </svg>
                 </button>
-                <button class="tool-btn" data-tool="pen" title="Kalem">
+                <button class="tool-btn" data-tool="pen" title="Pen">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
                     </svg>
                 </button>
                 
-                <button class="tool-btn" data-tool="text" title="Metin">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="4 7 4 4 20 4 20 7"></polyline>
-                        <line x1="9" y1="20" x2="15" y2="20"></line>
-                        <line x1="12" y1="4" x2="12" y2="20"></line>
-                    </svg>
-                </button>
-                <button class="tool-btn" data-tool="eraser" title="Silgi">
+                
+                <button class="tool-btn" data-tool="eraser" title="Eraser">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M16 2L21 7L11 17L6 12L16 2Z" />
                         <path d="M21 7L16 12" />
@@ -398,25 +395,25 @@
             </div>
 
             <div class="tool-group">
-                <input type="color" id="strokeColor" value="#000000" title="Çizgi Rengi">
-                <input type="color" id="fillColor" value="#ffffff" title="Dolgu Rengi">
-                <input type="range" id="strokeWidth" min="1" max="10" value="2" title="Çizgi Kalınlığı">
+                <input type="color" id="strokeColor" value="#000000" title="Stroke Color">
+                <input type="color" id="fillColor" value="#ffffff" title="Fill Color">
+                <input type="range" id="strokeWidth" min="1" max="10" value="2" title="Stroke Width">
             </div>
 
             <div class="tool-group">
-                <button class="action-btn" id="undoBtn" title="Geri Al">
+                <button class="action-btn" id="undoBtn" title="Undo">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 7v6h6"/>
                         <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/>
                     </svg>
                 </button>
-                <button class="action-btn" id="redoBtn" title="İleri Al">
+                <button class="action-btn" id="redoBtn" title="Redo">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 7v6h-6"/>
                         <path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/>
                     </svg>
                 </button>
-                <button class="action-btn" id="clearBtn" title="Temizle">
+                <button class="action-btn" id="clearBtn" title="Clear">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3,6 5,6 21,6"/>
                         <path d="M19,6V20a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"/>
@@ -425,7 +422,7 @@
             </div>
 
             <div class="tool-group">
-                <button class="action-btn" id="exportBtn" title="Dışa Aktar">
+                <button class="action-btn" id="exportBtn" title="Export">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                         <polyline points="7,10 12,15 17,10"/>
@@ -433,7 +430,7 @@
                     </svg>
                 </button>
                 <input type="file" id="importBtn" accept=".json" style="display: none;">
-                <button class="action-btn" onclick="document.getElementById('importBtn').click()" title="İçe Aktar (JSON)">
+                <button class="action-btn" onclick="document.getElementById('importBtn').click()" title="Import (JSON)">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                         <polyline points="17,8 12,3 7,8"/>
@@ -441,7 +438,7 @@
                     </svg>
                 </button>
                 <input type="file" id="imageInput" accept="image/*" style="display: none;">
-                <button class="action-btn" onclick="document.getElementById('imageInput').click()" title="Resim Ekle">
+                <button class="action-btn" onclick="document.getElementById('imageInput').click()" title="Add Image">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                         <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -451,7 +448,7 @@
             </div>
 
             <div class="tool-group">
-                <button class="action-btn" id="themeToggleBtn" title="Temayı Değiştir">
+                <button class="action-btn" id="themeToggleBtn" title="Toggle Theme">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="5"/>
                         <line x1="12" y1="1" x2="12" y2="3"/>
@@ -464,7 +461,10 @@
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
                     </svg>
                 </button>
-                <button class="action-btn" id="infoBtn" title="Hakkında">
+            </div>
+            <div class="tool-group app-title">
+                OpenDraw WebUI v.2.10
+                <button class="action-btn" id="infoBtn" title="About">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="12" y1="16" x2="12" y2="12"></line>
@@ -472,26 +472,22 @@
                     </svg>
                 </button>
             </div>
-            <div class="tool-group app-title">
-                OpenDraw WebUI v.2.7
-            </div>
         </div>
 
         
 
         <div class="canvas-container">
             <canvas id="canvas"></canvas>
-            <textarea id="textInput" class="text-input" style="display: none;"></textarea>
+            
         </div>
 
         <div id="exportModal" class="modal" style="display: none;">
             <div class="modal-content">
                 <span class="close-btn" id="closeExportModal">&times;</span>
-                <h3>Dışa Aktarma Seçenekleri</h3>
+                <h3>Export Options</h3>
                 <div class="export-options">
                     <button class="export-btn" data-format="png">PNG</button>
                     <button class="export-btn" data-format="jpg">JPG</button>
-                    <button class="export-btn" data-format="svg">SVG</button>
                     <button class="export-btn" data-format="pdf">PDF</button>
                     <button class="export-btn" data-format="json">JSON Project</button>
                 </div>
@@ -501,12 +497,13 @@
         <div id="infoModal" class="modal" style="display: none;">
             <div class="modal-content">
                 <span class="close-btn" id="closeInfoModal">&times;</span>
-                <h3>Hakkında</h3>
+                <h3>About</h3>
                 <div style="text-align: left; margin-top: 20px; line-height: 1.6;">
-                    <p><strong>Uygulama Adı:</strong> OpenDraw WebUI</p>
-                    <p><strong>Versiyon:</strong> 2.7</p>
-                    <p><strong>Geliştirici:</strong> farukguler.com</p>
-                    <p style="margin-top: 15px;">Bu, <strong>rough.js</strong> kütüphanesi kullanılarak oluşturulmuş, açık kaynaklı bir web tabanlı çizim uygulamasıdır. Eskiz benzeri, elle çizilmiş bir görünümle diyagramlar ve çizimler oluşturmanıza olanak tanır.</p>
+                    <p><strong>Application Name:</strong> OpenDraw WebUI</p>
+                    <p><strong>Version:</strong> v.2.10</p>
+                    <p><strong>Author:</strong> faruk-guler</p>
+                    <p><strong>License:</strong> GPLv3</p>
+                    <p style="margin-top: 15px;">This is an open-source, web-based drawing application created using the <strong>rough.js</strong> library. It allows you to create diagrams and drawings with a sketchy, hand-drawn look.</p>
                 </div>
             </div>
         </div>
@@ -518,7 +515,6 @@
                 this.canvas = document.getElementById('canvas');
                 this.ctx = this.canvas.getContext('2d');
                 this.rc = rough.canvas(this.canvas); // Initialize Rough.js
-                this.textInput = document.getElementById('textInput');
                 this.elements = [];
                 this.history = [];
                 this.historyIndex = -1;
@@ -592,10 +588,6 @@
                 // Tool buttons
                 document.querySelectorAll('.tool-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
-                        // If text input is active, finalize it before switching tools
-                        if (this.currentTool === 'text') {
-                            this.finishTextInput();
-                        }
                         document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
                         btn.classList.add('active');
                         this.currentTool = btn.dataset.tool;
@@ -773,18 +765,19 @@
                 const strokeWidthInput = document.getElementById('strokeWidth');
 
                 if (this.selectedElement) {
-                    const isText = this.selectedElement.type === 'text';
                     const isPen = this.selectedElement.type === 'pen';
 
                     strokeColorInput.value = this.selectedElement.strokeColor || '#000000';
 
-                    fillColorInput.disabled = isText || isPen;
+                    fillColorInput.disabled = isPen;
                     if (!fillColorInput.disabled) {
                         fillColorInput.value = this.selectedElement.fillColor || '#ffffff';
                     }
 
-                    strokeWidthInput.disabled = false; // Always enable for text thickness or stroke width
-                    strokeWidthInput.value = this.selectedElement.strokeWidth || 1;
+                    strokeWidthInput.disabled = false;
+                    if (!strokeWidthInput.disabled) {
+                        strokeWidthInput.value = this.selectedElement.strokeWidth || 1;
+                    }
 
                 } else {
                     // When nothing is selected, ensure the toolbars are enabled for the next drawing.
@@ -803,12 +796,6 @@
             handleMouseDown(e) {
                 if (this.isPanning) return;
 
-                // If text input is active, a click outside of it should finalize it and do nothing else.
-                if (this.textInput.style.display === 'block' && e.target !== this.textInput) {
-                    this.finishTextInput();
-                    return; // Prevent this click from starting a new action.
-                }
-                
                 const pos = this.getMousePos(e);
                 this.startX = pos.x;
                 this.startY = pos.y;
@@ -844,8 +831,6 @@
                         this.updateToolbarsOnSelection();
                     }
                     this.redraw();
-                } else if (this.currentTool === 'text') {
-                    this.startTextInput(pos.x, pos.y);
                 } else if (this.currentTool === 'pen') {
                     this.penPath = [{ x: pos.x, y: pos.y }];
                     this.currentElement = this.createElement('pen', pos.x, pos.y, pos.x, pos.y);
@@ -975,26 +960,25 @@
             handleMouseUp(e) {
                 if (!this.isDrawing) return;
                 this.isDrawing = false;
+
                 if (this.currentTool === 'eraser') {
                     this.saveState();
                 } else if (this.currentTool === 'select' && this.selectedElement) {
-                    if(this.isResizing) {
-                        if (this.selectedElement.type === 'text') {
-                            delete this.selectedElement.initialFontSize;
-                            this.updateToolbarsOnSelection(); // Update slider to match new font size
-                        } else {
+                    const moved = this.selectedElement.x !== this.selectedElement._initialX || this.selectedElement.y !== this.selectedElement._initialY;
+                    
+                    if (this.isResizing || moved) {
+                        if (this.isResizing) {
                             this.normalizeElement(this.selectedElement);
                         }
+                        this.saveState();
                     }
-                    this.saveState();
+
                     this.isResizing = false;
-                    delete this.selectedElement._initialX; // Clean up temp properties
+                    delete this.selectedElement._initialX;
                     delete this.selectedElement._initialY;
                     if (this.selectedElement._initialPath) {
                         delete this.selectedElement._initialPath;
                     }
-                } else if (this.currentTool === 'text') {
-                    // Do nothing here, finishTextInput is called on blur or enter
                 }
                 
                 if (this.currentElement) {
@@ -1003,29 +987,20 @@
                             this.elements.push(this.currentElement);
                             this.saveState();
                         }
-                    } else if (this.currentTool !== 'select' && this.currentTool !== 'text') {
-                        // Ensure width/height are positive for shapes
+                    } else if (this.currentTool !== 'select') {
                         this.normalizeElement(this.currentElement);
                         this.elements.push(this.currentElement);
                         this.saveState();
                     }
                 }
 
-                // Only nullify if not in text mode, as text mode needs the element to persist
-                if (this.currentTool !== 'text') {
-                    this.currentElement = null;
-                }
+                this.currentElement = null;
                 this.penPath = [];
                 this.isDrawing = false;
             }
 
             handleDoubleClick(e) {
-                const pos = this.getMousePos(e);
-                const clickedElement = this.getElementAt(pos.x, pos.y);
-                if (clickedElement && clickedElement.type === 'text') {
-                    this.selectedElement = clickedElement;
-                    this.startTextEditing(clickedElement);
-                }
+                
             }
 
             handleWheel(e) {
@@ -1078,16 +1053,7 @@
                 } else if (type === 'image') {
                     element.src = '';
                     element.image = new Image(); // Will be loaded later
-                } else if (type === 'text') {
-                    element.text = textContent;
-                    element.fontSize = 16; // Start with a default size
-                    element.strokeWidth = strokeWidth; // Get thickness from the slider
-                    element.fontFamily = 'cursive';
-                    element.strokeColor = document.getElementById('strokeColor').value;
-                    element.fillColor = 'transparent';
-                    element.width = 0; // Calculated dynamically
-                    element.height = 0; // Calculated dynamically
-                }
+                } 
                 return element;
             }
 
@@ -1105,7 +1071,7 @@
                 const { x: ex, y: ey, width, height } = element;
                 const tolerance = isErasing ? this.eraserRadius : this.selectionTolerance;
 
-                if (element.type === 'rectangle' || element.type === 'image' || element.type === 'text') {
+                if (element.type === 'rectangle' || element.type === 'image') {
                     const minX = Math.min(ex, ex + width) - tolerance;
                     const maxX = Math.max(ex, ex + width) + tolerance;
                     const minY = Math.min(ey, ey + height) - tolerance;
@@ -1305,31 +1271,7 @@
                             rc.draw(drawable);
                         }
                         break;
-                    case 'text':
-                        ctx.fillStyle = element.strokeColor;
-                        ctx.font = `${element.fontSize}px ${element.fontFamily}`;
-                        ctx.textAlign = 'left';
-                        ctx.lineWidth = element.strokeWidth;
-                        
-                        const textLines = element.text.split('\n');
-                        const lineHeight = element.fontSize * 1.2;
-                        let maxWidth = 0;
-
-                        textLines.forEach(line => {
-                            const textWidth = ctx.measureText(line).width;
-                            if (textWidth > maxWidth) {
-                                maxWidth = textWidth;
-                            }
-                        });
-
-                        element.width = maxWidth;
-                        element.height = textLines.length * lineHeight;
-
-                        textLines.forEach((line, index) => {
-                            ctx.strokeText(line, element.x, element.y + (index * lineHeight) + element.fontSize);
-                            ctx.fillText(line, element.x, element.y + (index * lineHeight) + element.fontSize);
-                        });
-                        break;
+                    
                     case 'image':
                         if (element.image && element.image.complete && element.image.naturalWidth !== 0) {
                             ctx.drawImage(element.image, x, y, width, height);
@@ -1357,11 +1299,6 @@
                 let outlineY = y;
                 let outlineWidth = width;
                 let outlineHeight = height;
-
-                if (type === 'text') {
-                    outlineWidth = element.width;
-                    outlineHeight = element.height;
-                }
 
                 ctx.strokeRect(outlineX, outlineY, outlineWidth, outlineHeight);
                 ctx.setLineDash([]);
@@ -1394,7 +1331,7 @@
             }
 
             normalizeElement(element) {
-                if (!element || element.type === 'pen' || element.type === 'text' || element.type === 'line' || element.type === 'arrow') {
+                if (!element || element.type === 'pen' || element.type === 'line' || element.type === 'arrow') {
                     return;
                 }
                 if (element.width < 0) {
@@ -1435,7 +1372,7 @@
             }
 
             clear() {
-                if (confirm('Tuvali temizlemek istediğinizden emin misiniz?')) {
+                if (confirm('Are you sure you want to clear the canvas?')) {
                     this.elements = [];
                     this.history = [];
                     this.historyIndex = -1;
@@ -1457,69 +1394,7 @@
                 }
             }
 
-            // Text input handling
-            startTextInput(x, y) {
-                const strokeWidth = parseInt(document.getElementById('strokeWidth').value);
-                const fontSize = 16; // Default font size
-                const fontFamily = 'cursive';
-                const color = document.getElementById('strokeColor').value;
-
-                this.textInput.style.display = 'block';
-                this.textInput.style.left = `${x * this.zoomLevel + this.offsetX}px`;
-                this.textInput.style.top = `${y * this.zoomLevel + this.offsetY}px`;
-                this.textInput.style.fontSize = `${fontSize * this.zoomLevel}px`;
-                this.textInput.style.fontFamily = fontFamily;
-                this.textInput.style.color = color;
-                this.textInput.style.lineHeight = `${fontSize * 1.2 * this.zoomLevel}px`;
-                this.textInput.value = '';
-                this.textInput.focus();
-
-                this.currentElement = this.createElement('text', x, y, 0, 0, '');
-                this.currentElement.fontSize = fontSize;
-                this.currentElement.strokeWidth = strokeWidth;
-                this.currentElement.fontFamily = fontFamily;
-                this.currentElement.strokeColor = color;
-                this.selectedElement = this.currentElement;
-            }
-
-            startTextEditing(textElement) {
-                this.textInput.style.display = 'block';
-                this.textInput.style.left = `${textElement.x * this.zoomLevel + this.offsetX}px`;
-                this.textInput.style.top = `${textElement.y * this.zoomLevel + this.offsetY}px`;
-                this.textInput.style.fontSize = `${textElement.fontSize * this.zoomLevel}px`;
-                this.textInput.style.fontFamily = textElement.fontFamily;
-                this.textInput.style.color = textElement.strokeColor;
-                this.textInput.style.lineHeight = `${textElement.fontSize * 1.2 * this.zoomLevel}px`;
-
-                this.textInput.value = textElement.text;
-                this.textInput.focus();
-                this.textInput.setSelectionRange(this.textInput.value.length, this.textInput.value.length);
-
-                // Remove the element from the main list to avoid drawing it while editing
-                this.elements = this.elements.filter(el => el.id !== textElement.id);
-                this.selectedElement = textElement; // Keep it as selected
-                this.redraw();
-            }
-
-            finishTextInput() {
-                if (this.textInput.style.display === 'block' && this.selectedElement && this.selectedElement.type === 'text') {
-                    const text = this.textInput.value;
-                    if (text.trim() !== '') {
-                        this.selectedElement.text = text;
-                        // Recalculate width/height after text is finalized
-                        this.drawElement(this.selectedElement);
-                        this.elements.push(this.selectedElement);
-                        this.saveState();
-                    }
-                    // If text is empty, the element is simply not added back, effectively deleting it.
-                }
-
-                this.textInput.style.display = 'none';
-                this.textInput.value = '';
-                this.currentElement = null; // Clear current element
-                this.redraw();
-                this.updateToolbarsOnSelection(); // Show properties for the finalized text element
-            }
+            
 
             // Clipboard functions (simplified for single element)
             copySelectedElement() {
@@ -1567,21 +1442,23 @@
                 }
 
                 if (format === 'svg') {
-                    let svgElements = [];
-                    const svgContainer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                    const roughSvg = rough.svg(svgContainer);
+                    // Create a <g> element to act as a container for all shapes.
+                    const svgContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    // Initialize roughSvg WITHOUT a host element. It will return nodes instead of appending them.
+                    const roughSvg = rough.svg();
 
                     this.elements.forEach(element => {
                         const { type, x, y, width, height, strokeColor, fillColor, strokeWidth } = element;
                         const o = {
                             stroke: strokeColor,
-                            fill: fillColor === 'transparent' ? 'none' : fillColor,
+                            fill: (fillColor === 'transparent' || element.type === 'text' || element.type === 'pen') ? 'none' : fillColor,
                             strokeWidth: strokeWidth,
                             roughness: this.roughness,
-                            fillStyle: (fillColor === '#ffffff' || fillColor === 'transparent') ? 'hachure' : 'solid'
+                            fillStyle: (fillColor === '#ffffff' || fillColor === 'transparent' || element.type === 'text') ? 'hachure' : 'solid'
                         };
 
-                        let el;
+                        let el = null; // Holds the generated element
+
                         switch(element.type) {
                             case 'rectangle':
                                 el = roughSvg.rectangle(x, y, width, height, o);
@@ -1603,8 +1480,7 @@
                                 if (element.path && element.path.length > 1) {
                                     const points = element.path.map(p => [p.x, p.y]);
                                     const drawable = rough.generator().linearPath(points, o);
-                                    const pathData = rough.generator().toPaths(drawable);
-                                    el = roughSvg.path(pathData[0].d, o);
+                                    el = roughSvg.draw(drawable);
                                 }
                                 break;
                             case 'arrow':
@@ -1617,11 +1493,9 @@
                                 const p2 = [x2, y2];
                                 const p3 = [ x2 - size * Math.cos(angle + Math.PI / 6), y2 - size * Math.sin(angle + Math.PI / 6) ];
                                 const arrowhead = roughSvg.polygon([p1, p2, p3], o);
-                                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                                g.appendChild(arrowLine);
-                                g.appendChild(arrowhead);
-                                el = g;
-                                break;
+                                svgContainer.appendChild(arrowLine);
+                                svgContainer.appendChild(arrowhead);
+                                break; // Composite shape, parts are already appended
                             case 'cylinder':
                                 const ellipseRadiusX_svg = Math.abs(width) / 2;
                                 const ellipseRadiusY_svg = Math.abs(height) / 8;
@@ -1634,43 +1508,16 @@
                                 const leftLine = roughSvg.line(x, topEllipseY_svg, x, bottomEllipseY_svg, o);
                                 const rightLine = roughSvg.line(x + width, topEllipseY_svg, x + width, bottomEllipseY_svg, o);
                                 
-                                const cylGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                               cylGroup.appendChild(leftLine);
-                               cylGroup.appendChild(rightLine);
-                               cylGroup.appendChild(bottomHalfEllipse);
-                               cylGroup.appendChild(topEllipse);
-                                el = cylGroup;
-                                break;
+                                svgContainer.appendChild(leftLine);
+                                svgContainer.appendChild(rightLine);
+                                svgContainer.appendChild(bottomHalfEllipse);
+                                svgContainer.appendChild(topEllipse);
+                                break; // Composite shape, parts are already appended
                             case 'cloud':
                                 const cloudPath = `M ${x + width * 0.2} ${y + height * 0.7} C ${x - width * 0.1} ${y + height * 0.9}, ${x + width * 0.1} ${y + height * 0.3}, ${x + width * 0.4} ${y + height * 0.2} C ${x + width * 0.8} ${y - height * 0.1}, ${x + width * 1.1} ${y + height * 0.2}, ${x + width * 0.9} ${y + height * 0.5} C ${x + width * 1.2} ${y + height * 0.8}, ${x + width * 0.8} ${y + height * 1.1}, ${x + width * 0.5} ${y + height * 0.9} C ${x + width * 0.2} ${y + height * 1.1}, ${x + width * 0.0} ${y + height * 0.9}, ${x + width * 0.2} ${y + height * 0.7} Z`;
                                 el = roughSvg.path(cloudPath, o);
                                 break;
-                            case 'text':
-                                const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                                textEl.setAttribute('x', x);
-                                textEl.setAttribute('y', y + element.fontSize);
-                                textEl.setAttribute('font-family', element.fontFamily);
-                                textEl.setAttribute('font-size', element.fontSize);
-                                textEl.setAttribute('stroke', element.strokeColor);
-                                textEl.setAttribute('stroke-width', element.strokeWidth);
-                                textEl.setAttribute('fill', element.strokeColor);
-                                textEl.style.whiteSpace = 'pre';
-
-                                const textLines = element.text.split('\n');
-                                const lineHeight = element.fontSize * 1.2;
-                                textLines.forEach((line, index) => {
-                                    if (index > 0) {
-                                        const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-                                        tspan.setAttribute('x', x);
-                                        tspan.setAttribute('dy', lineHeight);
-                                        tspan.textContent = line;
-                                        textEl.appendChild(tspan);
-                                    } else {
-                                        textEl.textContent = line;
-                                    }
-                                });
-                                el = textEl;
-                                break;
+                            
                             case 'image':
                                 if (element.src) {
                                     const imageEl = document.createElementNS('http://www.w3.org/2000/svg', 'image');
@@ -1683,12 +1530,17 @@
                                 }
                                 break;
                         }
+                        // For simple shapes, append the generated element now.
                         if (el) {
                             svgContainer.appendChild(el);
                         }
                     });
 
-                    const svgContent = `<svg width="${this.canvas.width}" height="${this.canvas.height}" viewBox="0 0 ${this.canvas.width} ${this.canvas.height}" xmlns="http://www.w3.org/2000/svg"><g transform="translate(${this.offsetX} ${this.offsetY}) scale(${this.zoomLevel})">${svgContainer.innerHTML}</g></svg>`;
+                    // Apply the pan and zoom transform to the container group.
+                    svgContainer.setAttribute('transform', `translate(${this.offsetX} ${this.offsetY}) scale(${this.zoomLevel})`);
+
+                    // Create the final SVG string, embedding the container's outerHTML.
+                    const svgContent = `<svg width="${this.canvas.width}" height="${this.canvas.height}" viewBox="0 0 ${this.canvas.width} ${this.canvas.height}" xmlns="http://www.w3.org/2000/svg">${svgContainer.outerHTML}</svg>`;
 
                     const blob = new Blob([svgContent], { type: 'image/svg+xml' });
                     const url = URL.createObjectURL(blob);
@@ -1848,7 +1700,7 @@
         window.addEventListener('beforeunload', (e) => {
             if (window.drawingApp && window.drawingApp.elements.length > 0) {
                 e.preventDefault();
-                e.returnValue = 'Kaydedilmemiş değişiklikler var. Sayfayı kapatmak istediğinizden emin misiniz?';
+                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
             }
         });
     </script>
