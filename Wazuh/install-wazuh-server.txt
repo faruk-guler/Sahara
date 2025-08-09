@@ -1,1 +1,24 @@
 https://documentation.wazuh.com/current/quickstart.html
+
+# Requirements
+|-------------------------------|
+
+Agents CPU RAM Storage (90 days)
+------ ---- --- ----------------
+1–25 4 vCPU 8 GiB 50 GB
+25–50 8 vCPU 8 GiB 100 GB
+50–100 8 vCPU 8 GiB 200 GB
+
+- Disable Firewall
+- Disable Selinux
+- Disable Apparmor
+-----------------------
+
+# Get Wazuh Login Pass:
+sudo tar -O -xvf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt
+
+# Disable Wazuh Updates repository:
+#YUM: sed -i "s/^enabled=1/enabled=0/" /etc/yum.repos.d/wazuh.repo
+#APT: sed -i "s/^deb /#deb /" /etc/apt/sources.list.d/wazuh.list && apt update
+
+
