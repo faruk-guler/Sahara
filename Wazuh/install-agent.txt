@@ -1,3 +1,6 @@
 https://wazuh.com/install/
+# Windows:
 https://documentation.wazuh.com/current/installation-guide/wazuh-agent/wazuh-agent-package-windows.html
+
+Linux:
 https://documentation.wazuh.com/current/installation-guide/wazuh-agent/wazuh-agent-package-linux.html
