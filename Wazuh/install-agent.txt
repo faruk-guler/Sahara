@@ -1,6 +1,7 @@
 https://wazuh.com/install/
 
 #Requirements
+|------------------------------------
 
 Agents CPU RAM Storage (90 days)
 ------ ---- --- ----------------
@@ -11,6 +12,9 @@ Agents CPU RAM Storage (90 days)
 - Disable Firewall
 - Disable Selinux
 - Disable Apparmor
+
+|------------------------
+
 
 # Windows:
 https://documentation.wazuh.com/current/installation-guide/wazuh-agent/wazuh-agent-package-windows.html
