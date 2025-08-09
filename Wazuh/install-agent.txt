@@ -20,3 +20,7 @@ https://documentation.wazuh.com/current/installation-guide/wazuh-agent/wazuh-age
 
 # Get Wazuh Login Pass:
 sudo tar -O -xvf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt
+
+# Disable Wazuh Updates repository:
+YUM: sed -i "s/^enabled=1/enabled=0/" /etc/yum.repos.d/wazuh.repo
+APT: sed -i "s/^deb /#deb /" /etc/apt/sources.list.d/wazuh.list && apt update
