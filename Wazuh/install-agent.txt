@@ -5,5 +5,5 @@ https://documentation.wazuh.com/current/installation-guide/wazuh-agent/wazuh-age
 Linux:
 https://documentation.wazuh.com/current/installation-guide/wazuh-agent/wazuh-agent-package-linux.html
 
-# Get Pass:
+# Get Wazuh Login Pass:
 sudo tar -O -xvf wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt
