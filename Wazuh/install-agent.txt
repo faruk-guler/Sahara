@@ -5,6 +5,7 @@ https://documentation.wazuh.com/current/installation-guide/wazuh-agent/wazuh-age
 
 # Linux:
 https://documentation.wazuh.com/current/installation-guide/wazuh-agent/wazuh-agent-package-linux.html
+
 sudo systemctl daemon-reload
 sudo systemctl enable wazuh-agent
 sudo systemctl start wazuh-agent
