@@ -1,7 +1,7 @@
 https://documentation.wazuh.com/current/quickstart.html
 
 # Requirements
-|-------------------------------|
+-------------------------------|
 
 Agents CPU RAM Storage (90 days)
 ------ ---- --- ----------------
