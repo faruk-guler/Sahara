@@ -1,4 +1,10 @@
 https://wazuh.com/install/
+
+#Requirements
+- Disable Firewall
+- Disable Selinux
+- Disable Apparmor
+
 # Windows:
 https://documentation.wazuh.com/current/installation-guide/wazuh-agent/wazuh-agent-package-windows.html
 
