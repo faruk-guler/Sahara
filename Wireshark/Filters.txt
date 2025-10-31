@@ -32,7 +32,7 @@ frame.len > 2000
 )
 
 #############################################################
-# Filters:
+# General Filters:
 #############################################################
 tls.handshake.extensions_server_name
 dns.flags.response == 0
