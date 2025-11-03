@@ -7,15 +7,15 @@ sudo yum update
 ```
 # Install Ansible
 ```
-> RHELL:
-sudo yum install epel-release -y 
-sudo yum install ansible -y 
-
 > Debian:
 sudo apt install software-properties-common
 sudo apt install ansible-core
-#sudo apt install ansible
+#sudo apt install ansible [All Modules]
 #sudo apt install sshpass
+
+> RHELL:
+sudo yum install epel-release -y 
+sudo yum install ansible -y 
 
 > macOS:
 brew install ansible
