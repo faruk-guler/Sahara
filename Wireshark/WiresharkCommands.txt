@@ -1,0 +1,70 @@
+WIRESHARK FILTERING COMMANDS:
+
+
+By IP Address:
+ip.addr==10.10.10.11
+
+
+By Destination IP Address:
+ip.dst==10.10.10.11
+
+
+By Source IP Address:
+ip.src==10.10.10.11
+
+
+By multiple ip address:
+ip.addr==10.10.10.11 and ip.addr==10.10.10.12
+
+
+With IP Address Exclusion:
+!(ip.addr==10.10.10.12)
+
+
+By TCP Port:tcp.port==80
+
+
+By Destination TCP Port:
+tcp.dstport==80
+
+
+By IP Address and TCP Port:
+ip.addr==10.10.10.11 and tcp.port==80
+
+
+By Hostname:
+ip.host==server05
+
+
+By MAC Addresses:
+eth.addr==00:70:f4:23:18:c4
+
+
+Filtering Broadcast Packets:
+eth.dst==ff:ff:ff:ff:ff:ff
+
+
+By URL:
+http.host=="www.google.com"
+http.host contains "google"
+
+
+By HTTP Method:
+http.request.method==GET 
+http.request.method==POST
+http.request.method==GET or http.request.method==POST
+
+
+By IP and HTTP Method:
+ip.addr==10.10.10.11 and http.request.method==GET or http.request.method==POST
+
+
+By IP and Protocol:
+ip.addr==10.10.10.11 and icmp
+
+_________________________________________________________
+
+
+--- SEARCH SHORTCUT ---
+
+Ctrl + F >>> String
