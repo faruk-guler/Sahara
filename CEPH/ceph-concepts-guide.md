@@ -1,7 +1,5 @@
 # 🐙 Ceph Master Guide: Nedir, Ne Değildir, Nasıl Çalışır?
 
-![Ceph Logo](https://raw.githubusercontent.com/faruk-guler/Sahara/refs/heads/main/CEPH/Images/ceph.webp)
-
 Bu doküman, Ceph depolama sistemini en temelinden en derin mimarisine kadar, bir sistem mühendisinin bilmesi gereken detaylarla anlatmak için hazırlanmıştır. Kurulumdan önce "Neye bulaşıyoruz?" sorusunun tam cevabıdır.
 
 ---
@@ -54,8 +52,6 @@ Ceph ise **CRUSH** (Controlled Replication Under Scalable Hashing) algoritmasın
 * **Mantık:** Verinin nerede duracağını **hesaplar**, "sormaz".
 * İstemci (Client) matematiksel bir işlem yapar ve "Bu dosya Node 3'teki Disk 5'e gitmeli" der.
 * Bu sayede merkezi bir darboğaz (bottleneck) olmadan Exabyte'larca veriyi yönetebilir.
-
-![Ceph Architecture Diagram](C:/Users/SISTEM/.gemini/antigravity/brain/85289e52-69c9-4c2e-9f4e-f6c356f0651c/ceph_architecture_diagram_1770194189443.png)
 
 ---
 
@@ -121,8 +117,6 @@ Bir dosya yazmak istediğinde arka planda şunlar olur:
 6. **Replikasyon:** Birincil OSD, veriyi alır ve diğer 2 kopya OSD'ye (Secondary) gönderir (varsayılan size=3 için).
 7. **Onay (Ack):** Diğer 2 OSD "Yazdım" dediğinde, Birincil OSD istemciye "İşlem Tamam" der.
     * *Bu sayede veri tutarlılığı (consistency) %100 garanti altına alınır.*
-
-![Ceph Data Flow Diagram](C:/Users/SISTEM/.gemini/antigravity/brain/85289e52-69c9-4c2e-9f4e-f6c356f0651c/ceph_data_flow_1770194214667.png)
 
 ---
 
