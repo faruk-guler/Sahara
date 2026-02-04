@@ -78,9 +78,16 @@ Artık sadece Node 1 üzerindeyiz. Burası bizim yönetim merkezimiz olacak.
 ### A. Cephadm ve CLI Araçlarını Yükle
 
 ```bash
-curl --silent --remote-name --location https://github.com/ceph/ceph/raw/reef/src/cephadm/cephadm
+# Doğru linkten cephadm scriptini indir (Resmi sunucu)
+curl --silent --remote-name --location https://download.ceph.com/rpm-reef/el9/noarch/cephadm
+
+# Çalıştırma izni ver
 chmod +x cephadm
+
+# Reef sürümü için repoları sisteme ekle
 sudo ./cephadm add-repo --release reef
+
+# ceph-common paketini yükle
 sudo ./cephadm install ceph-common
 ```
 
