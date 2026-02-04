@@ -1,6 +1,6 @@
 # 🐙 Ceph Master Guide: Nedir, Ne Değildir, Nasıl Çalışır?
 
-![Ceph Logo](C:/Users/SISTEM/.gemini/antigravity/brain/85289e52-69c9-4c2e-9f4e-f6c356f0651c/ceph-logo.webp)
+![Ceph Logo](https://raw.githubusercontent.com/faruk-guler/Sahara/refs/heads/main/CEPH/Images/ceph.webp)
 
 Bu doküman, Ceph depolama sistemini en temelinden en derin mimarisine kadar, bir sistem mühendisinin bilmesi gereken detaylarla anlatmak için hazırlanmıştır. Kurulumdan önce "Neye bulaşıyoruz?" sorusunun tam cevabıdır.
 
