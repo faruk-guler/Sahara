@@ -51,7 +51,7 @@ Ceph, node'ları isimle tanır. `/etc/hosts` dosyasına hepsini ekle:
 192.168.1.12 node3.local node3
 ```
 
-### B. Zaman Senkronizasyonu (Kritik İncelik ⚠️)
+### B. Zaman Senkronizasyonu (Kritik İncelik) ⚠️
 
 Ceph'in toleransı milisaniyelerdir. Saatler kayarsa cluster çöker (Clock Skew hatası).
 
