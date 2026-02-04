@@ -271,4 +271,4 @@ mkfs.ext4 /dev/rbd0
 mount /dev/rbd0 /mnt
 ```
 
-**Tebrikler!** Artık kendi kendine yeten, kendini iyileştirebilen (Self-healing), Enterprise seviyesinde bir depolama kümen var. Dashboard'a (`https://192.168.1.10:8443`) girip o meşhur Ceph grafiğini izleyebilirsin.
+**Tebrikler!** Artık kendi kendine yeten, kendini iyileştirebilen (Self-healing), Enterprise seviyesinde bir depolama kümen var. Dashboard'a (`https://192.168.1.10:8443`) girip o meşhur Ceph grafiğini izleyebilirsiniz.
