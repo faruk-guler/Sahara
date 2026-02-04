@@ -160,7 +160,7 @@ Aşağıdaki komut, tüm node'lardaki tüm boş ve uygun diskleri otomatik olara
 ceph orch apply osd --all-available-devices
 ```
 
-### C. Gelişmiş Disk Yapılandırması (İncelik 🧠)
+### C. Gelişmiş Disk Yapılandırması (İncelik) 🧠
 
 Eğer "Benim SSD'lerim var, bunları HDD'lerin cache'i (WAL/DB) olarak kullanmak istiyorum" dersen (Hybrid OSD), basit komut yerine Drive Group (YAML) kullanmalısın.
 
