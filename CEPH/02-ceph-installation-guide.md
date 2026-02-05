@@ -161,9 +161,8 @@ ceph orch device ls
 
 ### B. Tüm Boş Diskleri OSD Yap (Kolay Yol)
 
-Aşağıdaki komut, tüm node'lardaki tüm boş ve uygun diskleri otomatik olarak OSD yapar:
-
 ```bash
+# tüm boş ve uygun diskleri otomatik olarak OSD yap
 ceph orch apply osd --all-available-devices
 
 # durumu izle
