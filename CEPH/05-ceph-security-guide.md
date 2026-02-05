@@ -238,7 +238,43 @@ radosgw-admin quota enable --quota-scope=user --uid=testuser
 
 ---
 
-## 7. RBD Şifreleme (LUKS)
+---
+
+## 7. RGW Server-Side Encryption (SSE-S3 & KMS)
+
+RGW, verileri diske yazmadan önce şifreleyebilir. İki yöntem vardır:
+
+### A. SSE-S3 (Ceph Yerleşik Anahtar)
+
+En basit yöntemdir. Ceph anahtarları kendisi yönetir.
+
+```bash
+# Vault entegrasyonu olmadan basit test için (Production için önerilmez)
+ceph config set client.rgw rgw_crypt_s3_kms_backend testing
+ceph config set client.rgw rgw_crypt_require_ssl false
+```
+
+### B. SSE-KMS (Vault Entegrasyonu)
+
+Enterprise standardı budur. Anahtarlar HashiCorp Vault'ta tutulur.
+
+```bash
+# 1. Vault adresini gir
+ceph config set client.rgw rgw_crypt_s3_kms_backend vault
+
+# 2. Vault adresini tanımla
+ceph config set client.rgw rgw_crypt_vault_addr http://vault-server:8200
+
+# 3. Vault Token (Dosyadan okuması önerilir)
+ceph config set client.rgw rgw_crypt_vault_token_file /etc/ceph/vault.token
+
+# 4. SSE-KMS aktif et
+ceph config set client.rgw rgw_crypt_require_ssl true
+```
+
+---
+
+## 8. RBD Şifreleme (LUKS)
 
 RBD image'ları LUKS ile şifrelenebilir.
 
@@ -262,7 +298,9 @@ rbd device map mypool/encrypted-disk \
 
 ---
 
-## 8. Network Güvenliği
+---
+
+## 9. Network Güvenliği
 
 ### Firewall Kuralları (Örnek: UFW)
 
@@ -295,7 +333,9 @@ ufw allow from 192.168.1.0/24 to any port 8443 proto tcp
 
 ---
 
-## 9. Audit Logging
+---
+
+## 10. Audit Logging
 
 ### Ceph Audit Log
 
@@ -319,7 +359,9 @@ ceph config set client.rgw rgw_ops_log_file_path /var/log/ceph/rgw-ops.log
 
 ---
 
-## 10. Güvenlik Best Practices
+---
+
+## 11. Güvenlik Best Practices
 
 ### ✅ Yapılması Gerekenler
 
@@ -340,7 +382,9 @@ ceph config set client.rgw rgw_ops_log_file_path /var/log/ceph/rgw-ops.log
 
 ---
 
-## 11. Güvenlik Denetimi Checklist
+---
+
+## 12. Güvenlik Denetimi Checklist
 
 ```text
 [ ] Tüm servisler Cephx authentication kullanıyor mu?

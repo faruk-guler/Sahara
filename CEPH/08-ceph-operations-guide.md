@@ -63,8 +63,8 @@ ceph -s
 
    ```bash
    wipefs -a /dev/sdX
-   # İnatçı LVM kalıntıları için:
-   ceph-volume lvm zap /dev/sdX --destroy
+   # İnatçı LVM kalıntıları için (Host üzerinde yüklü değilse cephadm shell kullan):
+   cephadm shell -- ceph-volume lvm zap /dev/sdX --destroy
    ```
 
 4. Yeni diski Ceph'e ekle:
@@ -127,13 +127,53 @@ cephadm logs --name osd.2
 
 ---
 
-## 🚨 5. Acil Durum Notları (Cheat Sheet)
+## 6. Performance Tuning & Optimization (Maksimum Hız)
+
+### Kernel Parametreleri (sysctl)
+
+Tüm OSD node'larında `/etc/sysctl.d/ceph-tuning.conf` :
+
+```bash
+# Network Receive/Send bufferları artır
+net.core.rmem_max = 56623104
+net.core.wmem_max = 56623104
+net.core.rmem_default = 56623104
+net.core.wmem_default = 56623104
+net.core.somaxconn = 4096
+
+# VM Dirty Ratio (Daha agresif writeback)
+vm.swappiness = 10
+vm.dirty_ratio = 40
+vm.dirty_background_ratio = 10
+```
+
+### OSD Bellek Ayarları (BlueStore)
+
+Eğer RAM bol ise (64GB+), OSD'ye daha fazla cache verin:
+
+```bash
+# Varsayılan 4GB. Bunu 8GB yapalım:
+ceph config set osd osd_memory_target 8589934592
+```
+
+### Network MTU (Jumbo Frames)
+
+Switch ve NIC destekliyorsa MTU 9000 yapın. Paket başı CPU yükünü azaltır.
+
+```bash
+ip link set eth0 mtu 9000
+# Netplan veya ifcfg dosyalarından kalıcı yapmayı unutma!
+```
+
+---
+
+## 7. Acil Durum Notları (Cheat Sheet)
 
 ### Disk Doluluğu Uyarısı (Near Full)
 
 Ceph disklerin %85'i dolunca **WARNING**, %95'i dolunca **READ-ONLY** moduna geçer.
 
-* **Çözüm:** Ya hemen eski veri sil ya da acilen yeni disk ekle.
+* **Çözüm:** Ya hemen eski veri sil ya da acilen yeni disk ekle
 
 ### Clock Skew (Saat Kayması)
 

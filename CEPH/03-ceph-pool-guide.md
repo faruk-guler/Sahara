@@ -42,6 +42,8 @@ ceph osd pool create mypool 128
 ceph osd pool application enable mypool rbd
 ```
 
+> **⚠️ ÖNEMLİ:** Pool oluşturduktan sonra **mutlaka** `application enable` komutu ile uygulama türünü belirtmelisiniz. Aksi halde pool kullanıma hazır olmaz ve uyarı alırsınız.
+
 ### Parametreli Oluşturma
 
 ```bash
@@ -89,6 +91,8 @@ ceph osd erasure-code-profile get my-ec-profile
 ceph osd pool create ec-pool 128 128 erasure my-ec-profile
 ceph osd pool application enable ec-pool rgw
 ```
+
+> **Not:** EC pool'lar genellikle RGW (object storage) için kullanılır, bu yüzden `rgw` application türü belirtilir.
 
 ### EC vs Replicated Karşılaştırma
 
@@ -266,7 +270,7 @@ ceph osd pool set mypool crush_rule hdd-rule
 
 ### ✅ Yapılması Gerekenler
 
-- Her pool'a uygulama etiketi ekleyin (`rbd`, `cephfs`, `rgw`)
+- **Her pool'a mutlaka uygulama etiketi ekleyin** (`rbd`, `cephfs`, `rgw`)
 - Production'da `pg_autoscaler` kullanın
 - Pool silmeden önce snapshot alın
 - Farklı iş yükleri için ayrı pool'lar oluşturun

@@ -109,6 +109,7 @@ Cluster'ın **yazma** kapasitesini ölçer.
 ```bash
 # testpool havuzuna, 10 saniye boyunca, durmaksızın veri yazar.
 ceph osd pool create testpool 32 32
+ceph osd pool application enable testpool rbd
 rados bench -p testpool 10 write --no-cleanup
 ```
 
@@ -344,7 +345,82 @@ rbd mirror image resync mypool/disk1
 
 ---
 
-## 📊 9. Client Best Practices
+## 9. RGW Multi-Site Data Sync (Active-Active DR)
+
+RGW Multi-site, verilerinizi coğrafi olarak farklı bölgeler (Zone) arasında senkronize eder. S3 katmanında çalışır.
+
+### Mimari Kavramları
+
+* **Realm:** Kök hiyerarşi (Global Namespace).
+* **Zonegroup:** Zone'ların grubu (Genelde bölge. Örn: TR-West).
+* **Zone:** Fiziksel veri merkezi (DC1, DC2).
+
+### Multi-Site Kurulumu (Özet)
+
+1. **Master Zone Kurulumu:**
+
+```bash
+# Realm oluştur
+radosgw-admin realm create --rgw-realm=myrealm --default
+
+# Zonegroup oluştur
+radosgw-admin zonegroup create --rgw-zonegroup=tr --endpoints=http://rgw1:8000 --master --default
+
+# Master Zone oluştur
+radosgw-admin zone create --rgw-zone=dc1 --endpoints=http://rgw1:8000 --master --default
+
+# Değişiklikleri işle
+radosgw-admin period update --commit
+```
+
+1. **Secondary Zone Kurulumu:**
+
+```bash
+# Realm bilgisini çek
+radosgw-admin realm pull --url=http://rgw1:8000 --access-key=<keys> --secret=<keys>
+
+# Secondary Zone oluştur
+radosgw-admin zone create --rgw-zone=dc2 --endpoints=http://rgw2:8000 --access-key=<keys> --secret=<keys>
+
+# Değişiklikleri işle
+radosgw-admin period update --commit
+```
+
+### Senkronizasyon Durumu
+
+```bash
+radosgw-admin sync status
+# Çıktıda "Syncing" veya "Caught up" yazmalı.
+```
+
+---
+
+## 10. S3 Object Lock (WORM - Write Once Read Many)
+
+Yasal saklama (compliance) ve Ransomware koruması için verilerin silinmesini engeller.
+
+### Object Lock Etkinleştirme
+
+**DİKKAT:** Object Lock sadece bucket **oluşturulurken** açılabilir. Sonradan açılamaz.
+
+```bash
+# Lock özellikli bucket oluştur
+aws --endpoint-url http://192.168.1.10:8000 s3api create-bucket \
+    --bucket locked-bucket \
+    --object-lock-enabled-for-bucket
+
+# Varsayılan koruma süresi (1 Yıl)
+aws --endpoint-url http://192.168.1.10:8000 s3api put-object-lock-configuration \
+    --bucket locked-bucket \
+    --object-lock-configuration '{"ObjectLockEnabled": "Enabled", "Rule": {"DefaultRetention": {"Mode": "COMPLIANCE", "Days": 365}}}'
+```
+
+* **Governance Mode:** Admin (root) silebilir, kullanıcı silemez.
+* **Compliance Mode:** **KİMSE** silemez (Süre dolana kadar). Root bile silemez.
+
+---
+
+## 11. Client Best Practices
 
 ### ✅ Yapılması Gerekenler
 

@@ -78,13 +78,13 @@ Artık sadece Node 1 üzerindeyiz. Burası bizim yönetim merkezimiz olacak.
 ### A. Cephadm ve CLI Araçlarını Yükle
 
 ```bash
-# Doğru linkten cephadm scriptini indir (Resmi sunucu)
-curl --silent --remote-name --location https://download.ceph.com/rpm-reef/el9/noarch/cephadm
+# Doğru linkten cephadm scriptini indir (Github'dan doğrudan güncel sürüm)
+curl --silent --remote-name --location https://github.com/ceph/ceph/raw/reef/src/cephadm/cephadm
 
 # Çalıştırma izni ver
 chmod +x cephadm
 
-# Reef sürümü için repoları sisteme ekle
+# Reef sürümü için repoları sisteme ekle (Her OS için otomatik algılar)
 sudo ./cephadm add-repo --release reef
 
 # ceph-common paketini yükle
@@ -102,7 +102,7 @@ sudo cephadm bootstrap --mon-ip 192.168.1.10
 ```
 
 > Bu işlem bittiğinde sana bir **Dashboard URL, Kullanıcı Adı (admin) ve Şifre** verecek. Bunu bir yere not et!
-> **Pro Tip - Komut Kısayolu:** Her seferinde `sudo cephadm shell veya cephadm shell -- ceph` yazmak yerine alias oluştur:
+> **Pro Tip - Komut Kısayolu:** Her seferinde `cephadm shell veya cephadm shell -- ceph` yazmak yerine alias oluştur:
 >
 > ```bash
 > alias ceph='cephadm shell -- ceph'
@@ -199,7 +199,7 @@ Metadata Server (MDS) gereklidir.
 
 ```bash
 # Önce MDS servislerini dağıt
-ceph orch apply mds myfs --placement="3 node1 node2 node3"
+ceph orch apply mds myfs --placement="node1 node2 node3"
 
 # Ardından CephFS volume'ü oluştur
 ceph fs volume create myfs
@@ -210,7 +210,7 @@ ceph fs volume create myfs
 Rados Gateway (RGW) gereklidir.
 
 ```bash
-ceph orch apply rgw myrgw --placement="3 node1 node2 node3"
+ceph orch apply rgw myrgw --placement="node1 node2 node3"
 ```
 
 ---

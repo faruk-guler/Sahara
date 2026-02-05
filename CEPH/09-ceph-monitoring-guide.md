@@ -50,7 +50,7 @@ ceph mgr module ls
 ### Kritik Modüller
 
 | Modül | Görev | Varsayılan |
-|-------|-------|------------|
+| :--- | :--- | :--- |
 | `dashboard` | Web UI | Aktif |
 | `prometheus` | Metrik ihracı | Pasif |
 | `balancer` | Veri dengeleme | Aktif |
@@ -103,7 +103,10 @@ scrape_configs:
 
 ```bash
 # Node exporter kurulumu
-apt install prometheus-node-exporter
+# Cephadm kullanıyorsanız node-exporter varsayılan olarak her node'da çalışır.
+# Manuel kurmanıza gerek yoktur.
+# Kontrol etmek için:
+ceph orch ps --daemon_type node-exporter
 
 # Prometheus'a ekle
 scrape_configs:
@@ -119,6 +122,10 @@ scrape_configs:
 ### Grafana Kurulumu
 
 ```bash
+# Cephadm ile Grafana kurulumu (Önerilen)
+ceph orch apply grafana
+
+# Veya Harici Grafana Kurulumu (Manual)
 apt install grafana
 systemctl enable grafana-server
 systemctl start grafana-server
@@ -129,7 +136,7 @@ systemctl start grafana-server
 Grafana.com'dan hazır Ceph dashboard'ları:
 
 | Dashboard ID | İsim | Açıklama |
-|--------------|------|----------|
+| :--- | :--- | :--- |
 | 2842 | Ceph Cluster | Genel cluster durumu |
 | 5336 | Ceph OSD | OSD detayları |
 | 5342 | Ceph Pools | Pool istatistikleri |
@@ -148,7 +155,7 @@ Grafana.com'dan hazır Ceph dashboard'ları:
 ### Cluster Sağlığı
 
 | Metrik | Açıklama | Alarm Eşiği |
-|--------|----------|-------------|
+| :--- | :--- | :--- |
 | `ceph_health_status` | 0=OK, 1=WARN, 2=ERR | >0 |
 | `ceph_osd_up` | OSD çalışıyor mu | =0 |
 | `ceph_osd_in` | OSD cluster'da mı | =0 |
@@ -157,7 +164,7 @@ Grafana.com'dan hazır Ceph dashboard'ları:
 ### Kapasite
 
 | Metrik | Açıklama | Alarm Eşiği |
-|--------|----------|-------------|
+| :--- | :--- | :--- |
 | `ceph_cluster_total_used_bytes` | Kullanılan alan | >%85 |
 | `ceph_pool_stored_raw` | Pool ham kullanım | - |
 | `ceph_osd_stat_bytes_used` | OSD kullanımı | >%90 |
@@ -165,7 +172,7 @@ Grafana.com'dan hazır Ceph dashboard'ları:
 ### Performans
 
 | Metrik | Açıklama |
-|--------|----------|
+| :--- | :--- |
 | `ceph_osd_op_r_latency_sum` | Okuma gecikmesi |
 | `ceph_osd_op_w_latency_sum` | Yazma gecikmesi |
 | `ceph_pool_rd` | Pool okuma sayısı |
@@ -174,7 +181,7 @@ Grafana.com'dan hazır Ceph dashboard'ları:
 ### PG Durumu
 
 | Metrik | Açıklama | Alarm Eşiği |
-|--------|----------|-------------|
+| :--- | :--- | :--- |
 | `ceph_pg_degraded` | Bozulmuş PG sayısı | >0 |
 | `ceph_pg_undersized` | Eksik replikasyon | >0 (uzun süre) |
 | `ceph_pg_stale` | Aktif olmayan PG | >0 |
@@ -271,7 +278,7 @@ groups:
 ### Ceph Log Konumları
 
 | Bileşen | Log Dosyası |
-|---------|-------------|
+| :--- | :--- |
 | MON | `/var/log/ceph/ceph-mon.*.log` |
 | OSD | `/var/log/ceph/ceph-osd.*.log` |
 | MGR | `/var/log/ceph/ceph-mgr.*.log` |
@@ -391,7 +398,7 @@ ceph daemon osd.0 dump_blocked_ops
 
 ## 11. Monitoring Checklist
 
-```
+```text
 [ ] Prometheus modülü aktif mi?
 [ ] Prometheus Ceph endpoint'i scrape ediyor mu?
 [ ] Grafana dashboard'ları yüklü mü?

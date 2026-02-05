@@ -41,8 +41,8 @@ ceph osd tree
 # CRUSH haritasını dışa aktar (binary)
 ceph osd getcrushmap -o crushmap.bin
 
-# Binary'yi okunabilir formata çevir
-crushtool -d crushmap.bin -o crushmap.txt
+# Binary'yi okunabilir formata çevir (cephadm shell gerekli)
+cephadm shell -- crushtool -d crushmap.bin -o crushmap.txt
 
 # Haritayı görüntüle
 cat crushmap.txt
@@ -80,13 +80,13 @@ ceph osd crush move rack2 root=default
 ```bash
 # 1. Mevcut haritayı al
 ceph osd getcrushmap -o crushmap.bin
-crushtool -d crushmap.bin -o crushmap.txt
+cephadm shell -- crushtool -d crushmap.bin -o crushmap.txt
 
-# 2. Düzenle
+# 2. Düzenle (Host üzerinde)
 nano crushmap.txt
 
 # 3. Tekrar derle ve uygula
-crushtool -c crushmap.txt -o newcrushmap.bin
+cephadm shell -- crushtool -c crushmap.txt -o newcrushmap.bin
 ceph osd setcrushmap -i newcrushmap.bin
 ```
 
@@ -193,7 +193,7 @@ crushtool -d crushmap.bin -o crushmap.txt
 
 Dosyaya ekle:
 
-```
+```text
 rule rack-isolation {
     id 10
     type replicated
@@ -207,7 +207,7 @@ rule rack-isolation {
 
 ```bash
 # Derle ve uygula
-crushtool -c crushmap.txt -o newcrushmap.bin
+cephadm shell -- crushtool -c crushmap.txt -o newcrushmap.bin
 ceph osd setcrushmap -i newcrushmap.bin
 ```
 
@@ -293,7 +293,7 @@ ceph osd reweight-by-utilization
 
 ```bash
 # Bir pool için veri dağılımını test et
-crushtool -i crushmap.bin --test --show-mappings --rule 0 --num-rep 3
+cephadm shell -- crushtool -i crushmap.bin --test --show-mappings --rule 0 --num-rep 3
 ```
 
 ### Kural Değişikliğinin Etkisini Önceden Gör

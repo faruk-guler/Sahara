@@ -11,7 +11,7 @@ Bu doküman, Ceph cluster'ının güvenli bir şekilde yükseltilmesi, sürüm g
 Ceph sürümleri alfabetik sırayla hayvan/deniz yaratığı isimleri alır:
 
 | Sürüm | İsim | Yayın Tarihi | Durum |
-|-------|------|--------------|-------|
+| :--- | :--- | :--- | :--- |
 | 14.x | Nautilus | 2019 | EOL |
 | 15.x | Octopus | 2020 | EOL |
 | 16.x | Pacific | 2021 | Maintenance |
@@ -21,7 +21,7 @@ Ceph sürümleri alfabetik sırayla hayvan/deniz yaratığı isimleri alır:
 
 ### Sürüm Numarası Anlamı
 
-```
+```text
 18.2.1
 │  │ └── Patch sürümü (hata düzeltmeleri)
 │  └──── Minor sürümü (özellik eklemeleri)
@@ -63,7 +63,7 @@ ceph mon dump > /backup/monmap-$(date +%Y%m%d).txt
 
 **Kritik:** Her zaman şu sırayı takip edin:
 
-```
+```text
 1. MON (Monitor)
 2. MGR (Manager)
 3. OSD (Object Storage Daemon)
@@ -269,7 +269,7 @@ podman save quay.io/ceph/ceph:v18.2.1 -o ceph-18.2.1.tar
 podman load -i ceph-18.2.1.tar
 ```
 
-### Upgrade Başlatma
+### Offline Upgrade Başlatma
 
 ```bash
 # Local image ile upgrade
@@ -318,7 +318,8 @@ rsync -avz /mnt/old-cephfs/ /mnt/new-cephfs/
 Tüm MON'lar bozulduysa:
 
 ```bash
-# Hayatta kalan bir MON'dan
+# Hayatta kalan bir MON'dan (Container içinde)
+cephadm unit --name mon.a --enter
 ceph-monstore-tool /var/lib/ceph/mon/ceph-a get monmap > /tmp/monmap
 ceph-monstore-tool /var/lib/ceph/mon/ceph-a rebuild
 ```
@@ -326,7 +327,8 @@ ceph-monstore-tool /var/lib/ceph/mon/ceph-a rebuild
 ### OSD Recovery
 
 ```bash
-# OSD veritabanını yeniden oluştur
+# OSD veritabanını yeniden oluştur (Container içinde)
+cephadm unit --name osd.5 --enter
 ceph-objectstore-tool --data-path /var/lib/ceph/osd/ceph-5 \
     --op rebuild-pg-info
 ```
@@ -359,7 +361,7 @@ ceph-objectstore-tool --data-path /var/lib/ceph/osd/ceph-5 \
 **3 Node Cluster için:**
 
 | Aşama | Süre | Notlar |
-|-------|------|--------|
+| :--- | :--- | :--- |
 | Hazırlık | 1 saat | Backup, kontrol |
 | MON Upgrade | 15 dk | 3 MON x 5 dk |
 | MGR Upgrade | 10 dk | 2 MGR x 5 dk |
@@ -374,7 +376,7 @@ ceph-objectstore-tool --data-path /var/lib/ceph/osd/ceph-5 \
 
 ### Upgrade Öncesi
 
-```
+```text
 [ ] HEALTH_OK durumu doğrulandı
 [ ] Tüm OSD'ler UP ve IN
 [ ] Tüm PG'ler active+clean
@@ -388,7 +390,7 @@ ceph-objectstore-tool --data-path /var/lib/ceph/osd/ceph-5 \
 
 ### Upgrade Sonrası
 
-```
+```text
 [ ] Tüm daemon'lar yeni sürümde
 [ ] HEALTH_OK durumu
 [ ] Client erişimi test edildi
