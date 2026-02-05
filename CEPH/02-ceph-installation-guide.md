@@ -165,6 +165,8 @@ Aşağıdaki komut, tüm node'lardaki tüm boş ve uygun diskleri otomatik olara
 
 ```bash
 ceph orch apply osd --all-available-devices
+
+# durumu izle
 watch ceph orch ps --refresh
 ```
 
