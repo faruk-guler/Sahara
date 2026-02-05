@@ -79,15 +79,30 @@ Mevcut bir kullanıcının anahtarını değiştirmek veya yetkilerini güncelle
 # Sadece yetkileri güncellemek (Key değişmez)
 ceph auth caps client.uygulama1 mon 'allow r' osd 'allow * pool=yeni_havuz'
 
-# Anahtarı ve yetkileri tamamen yeniden basmak/güncellemek
-# Dikkat: Bu işlem auth veritabanındaki key'i değiştirir, istemcilerde de güncellenmesi gerekir.
-ceph auth get-or-create client.uygulama1 mon 'allow r' osd 'allow *'
+# Anahtarı ve yetkileri tamamen yeniden basmak (Key Rotation)
+# Dikkat: `get-or-create` mevcut kullanıcı varsa key'i değiştirmez.
+# Key'i yenilemek için önce kullanıcı silinmeli, sonra tekrar oluşturulmalıdır:
+ceph auth del client.uygulama1
+ceph auth get-or-create client.uygulama1 mon 'allow r' osd 'allow *' -o /etc/ceph/ceph.client.uygulama1.keyring
 ```
 
 ### Kullanıcı Silme
 
 ```bash
 ceph auth del client.uygulama1
+```
+
+### Dashboard Kullanıcı Parolası Değiştirme
+
+Dashboard (Web UI) kullanıcılarının parolasını değiştirmek için:
+
+```bash
+# Dosyadan okuyarak değiştirme (Güvenli)
+echo "YeniGucluParola123!" > pass.txt
+ceph dashboard ac-user-set-password admin -i pass.txt
+
+# Doğrudan komut satırında (History'de görünebilir!)
+ceph dashboard ac-user-set-password admin 'YeniGucluParola123!'
 ```
 
 ---
@@ -255,6 +270,13 @@ radosgw-admin bucket list
 
 # Bucket onarımı (Index sorunları için)
 radosgw-admin bucket check --bucket=mybucket --fix
+
+# Access/Secret Key Yönetimi (Key Rotation)
+# Yeni bir anahtar çifti oluştur
+radosgw-admin key create --uid=user1 --key-type=s3 --gen-access-key --gen-secret
+
+# Belirli bir anahtarı sil
+radosgw-admin key rm --uid=user1 --access-key=ESKIACCESSKEY
 ```
 
 ---
