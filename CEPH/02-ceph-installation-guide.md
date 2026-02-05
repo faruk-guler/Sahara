@@ -102,7 +102,7 @@ sudo cephadm bootstrap --mon-ip 192.168.1.10
 ```
 
 > Bu işlem bittiğinde sana bir **Dashboard URL, Kullanıcı Adı (admin) ve Şifre** verecek. Bunu bir yere not et!
-> **Pro Tip - Komut Kısayolu:** Her seferinde `cephadm shell -- ceph` yazmak yerine alias oluştur:
+> **Pro Tip - Komut Kısayolu:** Her seferinde `sudo cephadm shell veya cephadm shell -- ceph` yazmak yerine alias oluştur:
 >
 > ```bash
 > alias ceph='cephadm shell -- ceph'
