@@ -2,6 +2,8 @@
 
 Bu belge, Ceph kurulumu sonrası sık kullanılan komutlar, yapılandırma kontrolleri, kullanıcı yönetimi ve temel izleme işlemleri için bir **"Hızlı Başvuru"** (Cheat Sheet) niteliğindedir.
 
+> **İpucu:** Belirli bir işi (örn: VMware Datastore, S3 Bucket) nasıl yapacağınızı arıyorsanız, **[14-ceph-scenario-cookbook.md](14-ceph-scenario-cookbook.md)** dosyasına bakın.
+
 ---
 
 ## 0. CLI Erişimi (Ceph Shell)

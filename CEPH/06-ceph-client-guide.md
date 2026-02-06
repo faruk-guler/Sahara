@@ -4,6 +4,81 @@ Bu doküman, kurduğumuz Ceph kümesini "nasıl kullanacağımızı" ve "hızın
 
 ---
 
+## 📀 0. RBD (Blok Depolama) Kullanımı - SAN
+
+Ceph'in en yaygın kullanım şekli "Sanal Disk" (Block Device) sağlamaktır. Tıpkı bir SAN ünitesi gibi sunucularınıza ham disk verebilirsiniz.
+
+### A. Havuz (Pool) Hazırlığı (Admin Tarafı)
+
+```bash
+# 1. Yeni bir havuz oluştur (veya mevcut olanı kullan)
+ceph osd pool create rbd_pool 32 32
+
+# 2. Havuzu RBD için etkinleştir (Zorunlu!)
+ceph osd pool application enable rbd_pool rbd
+```
+
+### B. Sanal Disk (Image) Oluşturma
+
+```bash
+# 100 GB boyutunda bir disk oluştur
+rbd create disk01 --size 10240 --pool rbd_pool
+
+# Oluşan diskleri listele
+rbd ls -p rbd_pool
+```
+
+### C. Diski Sunucuya Bağlama (Map)
+
+Linux sunucunuzda (Client):
+
+```bash
+# 1. Diski işletim sistemine tanıt
+rbd map disk01 --pool rbd_pool
+# Çıktı: /dev/rbd0 (Artık bu bir fiziksel disk gibidir)
+
+# 2. Diski görüntüle
+lsblk
+```
+
+### D. Formatla ve Kullan
+
+```bash
+# 1. Linux dosya sistemi (XFS veya EXT4) ile formatla
+mkfs.ext4 /dev/rbd0
+
+# 2. Mount et
+mkdir -p /mnt/ceph-disk
+mount /dev/rbd0 /mnt/ceph-disk
+
+# 3. Test et
+touch /mnt/ceph-disk/merhaba.txt
+```
+
+### E. Kalıcı Hale Getirme (fstab)
+
+Sunucu yeniden başladığında diskin otomatik gelmesi için:
+
+1. `/etc/ceph/rbdmap` dosyasına ekle:
+
+   ```text
+   rbd_pool/disk01    id=admin,keyring=/etc/ceph/ceph.client.admin.keyring
+   ```
+
+2. Servisi etkinleştir:
+
+   ```bash
+   systemctl enable rbdmap
+   ```
+
+3. `/etc/fstab` dosyasına ekle:
+
+   ```text
+   /dev/rbd/rbd_pool/disk01   /mnt/ceph-disk   ext4   defaults,noatime,_netdev   0 0
+   ```
+
+---
+
 ## 📂 1. CephFS (Dosya Sistemi) Kullanımı
 
 CephFS, tıpkı bir NFS sunucusu gibi çalışır. Birden fazla sunucu aynı klasöre aynı anda yazabilir (Shared File System).
@@ -425,7 +500,6 @@ aws --endpoint-url http://192.168.1.10:8000 s3api put-object-lock-configuration 
 ### ✅ Yapılması Gerekenler
 
 * Her uygulama için ayrı RBD image kullanın
-
 * Düzenli snapshot alın
 * CephFS'te quota kullanın
 * Kernel mount tercih edin (production için)
@@ -434,7 +508,6 @@ aws --endpoint-url http://192.168.1.10:8000 s3api put-object-lock-configuration 
 ### ❌ Yapılmaması Gerekenler
 
 * Tek bir büyük image'a tüm veriyi koymayın
-
 * Snapshot'ları çok uzun tutmayın (alan dolar)
 * Windows için native kernel RBD client beklemeyin (iSCSI kullanın)
 * NFS-Ganesha'yı yüksek performans gereken yerlerde kullanmayın

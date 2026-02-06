@@ -280,4 +280,6 @@ mkfs.ext4 /dev/rbd0
 mount /dev/rbd0 /mnt
 ```
 
+> **Detaylı Kullanım:** Diski kalıcı olarak bağlama (fstab), Snapshot alma veya kopyalama işlemleri için **[06-ceph-client-guide.md](06-ceph-client-guide.md)** dosyasına bakınız.
+
 **Tebrikler!** Artık kendi kendine yeten, kendini iyileştirebilen (Self-healing), Enterprise seviyesinde bir depolama kümen var. Dashboard'a (`https://192.168.1.10:8443`) girip o meşhur Ceph grafiğini izleyebilirsiniz.

@@ -120,21 +120,55 @@ Bir dosya yazmak istediğinde arka planda şunlar olur:
 
 ---
 
-## 7. Neden Ceph? (Use Cases)
+## 7. Kullanım Senaryoları ve Mimari Yaklaşım
 
-### Ne Zaman Kullanmalısın?
+Ceph'in gücü, 3 farklı depolama teknolojisini tek bir platformda sunmasından gelir. Gerçek dünyada bu teknolojiler şöyle kullanılır:
 
-* **OpenStack / Kubernetes / Proxmox:** Sanal makineleriniz için ortak, paylaşımlı ve büyüyebilen bir disk alanı lazımsa.
-* **S3 Depolama İhtiyacı:** Kendi verimerkezinde AWS S3 gibi bir yapı kurmak istiyorsan (MinIO alternatifi olarak daha enterprise).
-* **PetaByte Ölçeği:** 100 TB ve üzeri verin varsa, geleneksel NAS'lar yetmez. Ceph sınırsız büyür (Scale-out).
+### 🅰️ 3 Temel Depolama Türüne Göre Kullanım
 
-### Ne Zaman Kullanmamalısın?
+| Tür | Protokol | Gerçek Dünya Senaryoları |
+| :--- | :--- | :--- |
+| **Block Storage** | **RBD** | • Sanal Makineler (Proxmox, VMware, OpenStack)<br>• Kubernetes StatefulSets (PostgreSQL, Kafka)<br>• Fiziksel sunuculara ek disk (iSCSI/RBD) |
+| **File Storage** | **CephFS** | • Ortak çalışma alanları (Departman paylaşımları)<br>• Medya işleme (Render farm)<br>• Log toplama (ELK Stack)<br>• HPC Cluster'ları |
+| **Object Storage** | **RGW (S3)** | • Yedekleme (Veeam, Restic)<br>• Statik Web İçeriği (CDN Origin)<br>• Big Data (Spark/Hadoop)<br>• Arşiv (WORM) |
 
-* **Çok küçük kurulumlar:** "3 tane diskim var, dosya sunucusu yapacağım" diyorsan TrueNAS kur. Ceph bu ölçek için fazla komplekstir.
-* **Yüksek Performanslı Database (Latency):** Çok düşük gecikme (latency) gerektiren veritabanları için (Oracle RAC vb.) NVMe All-Flash Ceph kurmuyorsan, geleneksel SAN daha hızlı olabilir.
+### 🅱️ Sektörel Kullanım Örnekleri
 
----
+1. **Bulut Sağlayıcılar & ISP:**
+    * *Kullanım:* IaaS altyapısında müşterilere disk satmak.
+    * *Neden:* Multi-tenant yapı ve izolasyon yeteneği.
+
+2. **Finans & Bankacılık:**
+    * *Kullanım:* Değiştirilemez yedekler (Immutable Backup).
+    * *Neden:* S3 Object Lock (WORM) ile yasal uyumluluk ve Ransomware koruması.
+
+3. **Medya & Eğlence:**
+    * *Kullanım:* 4K/8K video düzenleme havuzu.
+    * *Neden:* CephFS ile yüzlerce editörün aynı anda ham görüntülere erişebilmesi.
+
+4. **Kamu & Güvenlik:**
+    * *Kullanım:* MOBESE / Güvenlik kamerası kayıtları.
+    * *Neden:* Petabyte ölçeğinde maliyet etkin depolama.
+
+### 🌐 Modern Trendler (2024-2026)
+
+* **Kubernetes-First:** Rook operatörü ile Ceph'in tamamen K8s içinde yönetilmesi.
+* **Edge Computing:** Şubelerde küçük Ceph cluster'ları, merkezde devasa cluster (Replikasyon ile).
+* **AI/ML Pipeline:** Eğitim verisetlerinin CephFS üzerinden GPU sunucularına beslenmesi.
+* **Green Storage:** Erasure Coding (EC) kullanımıyla %50 enerji tasarrufu.
+
+### ⚠️ Ceph Nerede KULLANILMAMALI?
+
+Ceph "her derde deva" değildir. Şu senaryolarda geleneksel çözümler daha iyidir:
+
+* **❌ Ultra-Düşük Gecikme (HFT):** Yüksek frekanslı borsa işlemleri gibi *mikrosaniye* hassasiyeti gereken yerler (NVMe-oF veya local disk kullanın).
+* **❌ Mikro Kurulumlar:** Sadece 2-3 sunucu ve basit dosya paylaşımı için Ceph'in bakım yüküne değmez (TrueNAS/Samba kullanın).
+* **❌ Windows-Native Ortamlar:** Eğer %100 Windows ve Active Directory odaklıysanız, SMB desteği için ek katmanlar gerekir (Native Windows Server daha az baş ağrıtır).
+
+### 6️⃣ Özet: "Herkesin Verisi Tek Yerde"
 
 ## 8. Özet
 
 Ceph, donanım bağımsızlığı sunan, kendi kendini yönetebilen ve iyileştirebilen **"Geleceğin Depolama teknolojisidir"**. Öğrenme eğrisi diktir (zordur), ancak bir kez kavradığınızda veri merkezinizin en güvenilir parçası olur. Donanım bozulur, diskler yanar, sunucular çöker; ama **Ceph hayatta kalır.**
+
+> **Sıradaki Adım:** Teori bittiyse, gerçek hayatta nasıl kullanacağınızı görmek için **[14-ceph-scenario-cookbook.md](14-ceph-scenario-cookbook.md)** dosyasındaki 14 Farklı Senaryoyu inceleyin.

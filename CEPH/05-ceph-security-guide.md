@@ -238,8 +238,6 @@ radosgw-admin quota enable --quota-scope=user --uid=testuser
 
 ---
 
----
-
 ## 7. RGW Server-Side Encryption (SSE-S3 & KMS)
 
 RGW, verileri diske yazmadan önce şifreleyebilir. İki yöntem vardır:
@@ -298,8 +296,6 @@ rbd device map mypool/encrypted-disk \
 
 ---
 
----
-
 ## 9. Network Güvenliği
 
 ### Firewall Kuralları (Örnek: UFW)
@@ -333,8 +329,6 @@ ufw allow from 192.168.1.0/24 to any port 8443 proto tcp
 
 ---
 
----
-
 ## 10. Audit Logging
 
 ### Ceph Audit Log
@@ -359,8 +353,6 @@ ceph config set client.rgw rgw_ops_log_file_path /var/log/ceph/rgw-ops.log
 
 ---
 
----
-
 ## 11. Güvenlik Best Practices
 
 ### ✅ Yapılması Gerekenler
@@ -379,8 +371,6 @@ ceph config set client.rgw rgw_ops_log_file_path /var/log/ceph/rgw-ops.log
 - Keyring dosyalarını version control'e eklemeyin
 - RGW'yi internet'e SSL olmadan açmayın
 - Tüm pool'lara `allow *` yetki vermeyin
-
----
 
 ---
 
