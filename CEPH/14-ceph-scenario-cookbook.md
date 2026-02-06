@@ -476,4 +476,3 @@ Artık firmanızdaki herhangi bir proje için "Disk lazım" dendiğinde, "Hangi 
 > *"Ceph cluster'ında yeni bir Pool açalım."*
 
 ---
-**🎉 Tebrikler!** Artık Ceph'i en basit disk ihtiyacından, en karmaşık yapay zeka ve global replikasyon senaryolarına kadar yönetebilecek bir başucu rehberine (Cookbook) sahipsiniz.
