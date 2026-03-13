@@ -1,6 +1,32 @@
 # 📄 Sayfa 2: İleri Kurulum ve Sistem Optimizasyonu (Ultra-Detay)
 
-Redis'in Windows (WSL2) ve çok işlemcili sunucularda en yüksek performansı vermesi için gereken derin ayarlar.
+Redis'in farklı ortamlarda ayağa kaldırılması ve çok işlemcili sunucularda en yüksek performansı vermesi için gereken tüm adımlar.
+
+## 0. Temel Kurulum Yöntemleri
+
+### A. Linux (Ubuntu/Debian) - Paket Yöneticisi
+En hızlı ve standart yöntem:
+```bash
+sudo apt update
+sudo apt install redis-server
+sudo systemctl enable redis-server
+```
+
+### B. Docker ile Hızlı Kurulum
+İzolasyon ve kolay yönetim için:
+```bash
+docker run --name my-redis -p 6379:6379 -d redis:7.2-alpine
+```
+
+### C. Kaynak Koddan Derleme (Expert Yöntem)
+En güncel versiyon ve özel optimizasyonlar için:
+```bash
+wget http://download.redis.io/redis-stable.tar.gz
+tar xvzf redis-stable.tar.gz
+cd redis-stable
+make # İşlemciye özel optimizasyon yapar
+sudo make install
+```
 
 ## 1. WSL2 Üzerinde Bellek ve I/O Yönetimi
 Windows üzerinde Redis çalıştırırken WSL2'nin varsayılan kısıtlamalarını aşmanız gerekir.

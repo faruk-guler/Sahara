@@ -1,5 +1,5 @@
 # 🚀 Redis: Modern Veri Dünyasının Hız Motoru (Giriş & Rehber)
-<img src="./img/redis-banner-1544x500.png" alt="Moodle Preview" width="50%">
+<img src="./img/redis-banner-1544x500.png" alt="Redis Preview" width="80%">
 
 Redis (Remote Dictionary Server), dünyadaki en popüler açık kaynaklı, bellek içi (in-memory) veri yapısı deposudur. Genellikle bir veritabanı, önbellek (cache), mesaj kuyruğu (message broker) ve akış motoru (streaming engine) olarak kullanılır.
 
