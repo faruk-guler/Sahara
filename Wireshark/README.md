@@ -1,149 +1,58 @@
+<!-- markdownlint-disable MD033 -->
+# Wireshark Master Rehberi (Türkçe)
+
 <p align="center">
-  <img src="https://www.wireshark.org/assets/theme-2015/images/wireshark_logo.png">
-  <br>
-  <b> Wireshark Cheat Sheet</b>
+  <img src="img/ws.png" alt="Wireshark Preview" width="20%">
 </p>
 
-<p> Wireshark, whose old name is Ethereal; It is a program that can run in many operating systems such as Windows, Linux, MacOS or Solaris and can analyze all the traffic going to network cards connected to computer. Analyze over 750 protocols Can capture packets and save them to a file. </p>
+Hoş geldiniz! Bu repo, dünyaca ünlü ağ analiz aracı **Wireshark**'ı ilk kurulumdan ileri seviye siber güvenlik analizlerine kadar her yönüyle ele alan modüler bir eğitim setidir.
 
- Logical operators are available for all filtering.
+---
 
-+ <b> Example: </b> ```http & ip.src == 192.168.0.1```
+## 📚 Dokümantasyon Modülleri
 
-+ <b> Management Frame: </b> The frame for the connection between the network device and the client.
+Analiz yapmak istediğiniz konuyu aşağıdan seçerek başlayabilirsiniz:
 
-+ <b> Control Frame: </b> Controls the integrity of data traffic between the network device and the client.
+1. **[1. Kurulum ve Arayüz Düzeni](01_Kurulum_ve_Arayuz.md)**
+   * Farklı platformlara kurulum, Npcap/USBPcap ve kolon özelleştirme.
+2. **[2. Temel Filtreleme Teknikleri](02_Temel_Filtreleme.md)**
+   * IP, MAC, Port filtreleri ve TCP Bayrak (Flags) analizi.
+3. **[3. Gelişmiş Tehdit Analizi](03_Gelismis_Tehdit_Analizi.md)**
+   * Gürültü engelleyici filtreler ve özel siber anafor temizlik şablonları.
+4. **[4. Kablosuz Ağ (WLAN) Analizi](04_Kablosuz_Ag_Analizi.md)**
+   * Monitor mod, Beacon paketleri ve WPA şifre çözme.
+5. **[5. Şifreli Trafik (TLS) ve Uygulama Katmanı](05_Sifreli_Trafik_TLS.md)**
+   * SNI yakalama, HTTPS trafiğini log dosyasıyla çözme.
+6. **[6. Uzman İstatistikleri ve Teşhis Araçları](06_Istatistik_ve_Tezhis.md)**
+   * Expert Info, VoIP analizi, akış takibi ve dışa aktarma.
+7. **[7. TShark ve Komut Satırı Kullanımı](07_TShark_ve_Komut_Satiri.md)**
+   * Grafik arayüzsüz sunucularda CLI üzerinden paket yakalama.
+8. **[8. Renklendirme ve Pcap İşlemleri](08_Renklendirme_ve_Pcap_Islemleri.md)**
+   * Trafiği boyama kuralları, Editcap/Mergecap ile dosya yönetimi.
+9. **[9. Kurumsal Ağ ve Protokol Analizi](09_Kurumsal_ve_Protokol_Analizi.md)**
+   * DNS tespiti, SMB analizi ve HTTP/2, HTTP/3 (QUIC) trafik detayları.
+10. **[10. Performans Optimizasyonu ve Özel Yapılandırmalar](10_Performans_ve_Ozel_Yapi.md)**
+    * Ring Buffer dizin kaydı, MaxMind GeoIP haritalama ve LUA Dissector'ları.
 
-+ <b> Data Frame: </b> The frame on which the original data is transferred.
+---
 
-Only to show the outgoing packets from the management frame.
- 
-```
-wlan.fc.type==0
-```
+## ⚡ Hızlı Başlangıç
 
-To show incoming, outgoing packets through control frame.
+Eğer acilen bir tıkanıklığı çözmeniz gerekiyorsa, her modülün sonundaki "Bir Sonraki Sayfa" linklerini takip ederek sırasıyla ilerlemeniz tavsiye edilir.
 
-```
-wlan.fc.type==1
-```
+> [!TIP]
+> **Pro Tip:** Wireshark'ta filtreleme yaparken `ssl` anahtar kelimesi yerine her zaman `tls` kullanmayı unutmayın!
 
-To show packets transferred over the data frame.
+---
 
-```
-wlan.fc.type==2
-```
+## 🤝 Katkıda Bulunma
 
-Association lists the requests.
+Hata görürseniz veya yeni bir filtre şablonu eklemek isterseniz, lütfen bir Issue açın veya Pull Request gönderin.
 
-```
-wlan.fc.type_subtype==0
-```
+**Mutlu Paket Yakalamalar!** 🦈
 
-Association lists the answers.
-
-```
-wlan.fc.type_subtype==1
-```
-
-Probe lists requests.
-
-```
-wlan.fc.type_subtype==4
-```
-
-Lists the probe responses.
-
-```
-wlan.fc.type_subtype==5
+```bash
+git clone git@github.com:ismailtasdelen/wireshark-cheatsheet.git
 ```
 
-Lists Beacon signals / waves.
-
-```
-wlan.fc.type_subtype==8
-```
-
-Lists the Authentication requests.
-
-```
-wlan.fc.type_subtype==11
-```
-
-Lists deauthentication requests.
-
-```
-wlan.fc.type_subtype==12
-```
-
-TCP lists the outgoing packets to the xx port.
-
-```
-tcp.port == xx
-```
-
-TCP lists packages with the Source xx port.
-
-```
-tcp.srcport == xx
-```
-
-TCP lists packages with a destination xx port.
-
-```
-tcp.dstport == xx
-```
-
-UDP lists the outgoing packets to the xx port.
-
-```
-udp.port == xx
-```
-
-UDP lists packets with a destination xx port.
-
-```
-udp.srcport == xx
-```
-
-UDP lists packages that have the Source xx port.
-
-```
-udp.dstport == xx
-```
-
-Lists the HTTP Get requests.
-
-```
-http.request
-```
-
-Lists packages for the source or destination mac address.
-
-```
-wlan.addr == MAC-Address
-```
-
-The source lists packages that have a mac address.
-
-```
-wlan.sa == MAC-Address
-```
-
-Lists packages that have a target mac address.
-
-```
-wlan.da == MAC-Address
-```
-
-<b> Cloning an Existing Repository ( Clone with HTTPS ) </b>
-```
-root@ismailtasdelen:~# git clone https://github.com/ismailtasdelen/wireshark-cheatsheet.git
-```
-
-<b> Cloning an Existing Repository ( Clone with SSH ) </b>
-```
-root@ismailtasdelen:~# git clone git@github.com:ismailtasdelen/wireshark-cheatsheet.git
-```
-
-You can open the issues to this repo to be support and add new rss lists to this list.
+> 💡 Projeye destekte bulunmak veya yeni filtre setleri / modüller eklemek isterseniz her zaman "Issue" oluşturabilir veya "Pull Request" atabilirsiniz!
