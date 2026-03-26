@@ -1,6 +1,6 @@
 # TrueNAS Master Series: 2026 Edition
 
-![TrueNAS Logo](https://www.truenas.com/wp-content/uploads/2021/05/TrueNAS-Logo-300x100.png)
+![TrueNAS Logo](https://www.storagereview.com/wp-content/uploads/2020/06/StorageReivew-iXsystems-TrueNAS-CORE-intro.png)
 
 ## 🗄️ TrueNAS Nedir?
 
