@@ -19,8 +19,8 @@ sudo apt update && sudo apt full-upgrade -y
 # 1.2 HAProxy'yi yükleyin
 sudo apt install -y haproxy nano
 
-# 1.3 Sürümü doğrulayın
-haproxy -v
+# 1.3 Sürümü doğrulayın (derleme bayraklarını ve SSL desteğini görmek için -vv kullanın)
+haproxy -vv
 
 # 1.4 Servisi başlatın ve otomatik açılışa ekleyin
 sudo systemctl enable --now haproxy
@@ -54,9 +54,10 @@ global
     group haproxy
     daemon
 
-    # TLS/SSL Güvenlik Sertleştirmeleri
-    ssl-default-bind-ciphers ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:RSA+AESGCM:RSA+AES:!aNULL:!MD5:!DSS
-    ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11
+    # TLS/SSL Güvenlik Sertleştirmeleri (TLS 1.2 + TLS 1.3)
+    ssl-default-bind-ciphers ECDHE+AESGCM:ECDHE+AES256:ECDHE+AES128:!aNULL:!MD5:!DSS
+    ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+    ssl-default-bind-options prefer-client-ciphers no-sslv3 no-tlsv10 no-tlsv11
 
 #---------------------------------------------------------------------
 # Varsayılan Ayarlar
@@ -66,9 +67,13 @@ defaults
     mode    http
     option  httplog
     option  dontlognull
-    timeout connect 5s
-    timeout client  50s
-    timeout server  50s
+    option  forwardfor
+    option  http-server-close
+    timeout connect          5s
+    timeout client           1m
+    timeout server           1m
+    timeout http-request     10s
+    timeout http-keep-alive  10s
     errorfile 400 /etc/haproxy/errors/400.http
     errorfile 403 /etc/haproxy/errors/403.http
     errorfile 408 /etc/haproxy/errors/408.http
@@ -82,7 +87,9 @@ defaults
 
 ### Adım 3: HTTP Yük Dengeleme (Load Balancing)
 
-Aşağıdaki örnek senaryo, gelen HTTP trafiğini `192.168.1.10`, `192.168.1.11` ve `192.168.1.12` adreslerindeki üç web sunucusuna eşit olarak dağıtır:
+Aşağıdaki örnek senaryo, gelen HTTP trafiğini `192.168.1.10`, `192.168.1.11` ve `192.168.1.12` adreslerindeki üç web sunucusuna eşit olarak dağıtır.
+
+> ⚠️ **Önemli:** Adım 4'te HTTPS yapılandırması kullanacaksanız, bu adımdaki `frontend http_frontend` bloğunu eklemeyin veya yorum satırı (`#`) yapın — aksi halde aynı isimle iki frontend tanımı çakışır ve HAProxy hata verir.
 
 #### Seçenek A: `roundrobin` (Sıralı Dağıtım) — Varsayılan
 
@@ -147,7 +154,7 @@ Kurumunuzun sağladığı sertifika dosyalarını (`domain.crt`, `intermediate.c
 sudo mkdir -p /etc/haproxy/certs
 
 # 1. Sertifika, Ara CA ve Özel Anahtarı sırasıyla birleştirin
-sudo cat domain.crt intermediate.crt domain.key | sudo tee /etc/haproxy/certs/kurumsal.pem
+cat domain.crt intermediate.crt domain.key | sudo tee /etc/haproxy/certs/kurumsal.pem > /dev/null
 
 # 2. Dosya izinlerini kısıtlayın (güvenlik için sadece root okuyabilsin)
 sudo chmod 600 /etc/haproxy/certs/kurumsal.pem
@@ -165,6 +172,8 @@ frontend https_frontend
     bind *:443 ssl crt /etc/haproxy/certs/kurumsal.pem
     # Güvenlik başlıkları ekle
     http-response set-header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+    # Backend uygulamalara gerçek protokol bilgisini ilet (Django, Laravel, WordPress için şart)
+    http-request set-header X-Forwarded-Proto https
     default_backend web_servers
 
 frontend http_frontend
@@ -182,7 +191,8 @@ HAProxy, backend sunucuları düzenli aralıklarla kontrol eder. Erişilemeyen s
 ```text
 backend web_servers
     balance roundrobin
-    option httpchk GET /health "HTTP/1.1\r\nHost: localhost"
+    option httpchk
+    http-check send meth GET uri /health ver HTTP/1.1 hdr Host localhost
 
     # inter: kontrol aralığı | rise: sağlıklı sayılmak için başarı sayısı | fall: devre dışı için başarısızlık sayısı
     server web1 192.168.1.10:80 check inter 3s rise 2 fall 3
@@ -200,7 +210,7 @@ HAProxy, yerleşik bir izleme arayüzü sunar. `haproxy.cfg` dosyasına ekleyin:
 
 ```text
 listen stats
-    bind *:8404
+    bind 127.0.0.1:8404   # Sadece localhost — dışarıya açmayın!
     stats enable
     stats uri /haproxy-stats
     stats realm HAProxy\ Statistics
@@ -253,7 +263,12 @@ sudo systemctl reload haproxy
 ```bash
 sudo apt update
 sudo apt install --only-upgrade haproxy
+
+# Küçük (patch) sürüm güncellemelerinde reload yeterlidir
 sudo systemctl reload haproxy
+
+# Major sürüm güncellemelerinde yeni binary için restart gerekebilir
+# sudo systemctl restart haproxy
 ```
 
 ---
@@ -261,7 +276,7 @@ sudo systemctl reload haproxy
 ## 💡 Dikkat Edilmesi Gereken İpuçları & Düzeltmeler
 
 1. **Yapılandırma Doğrulama:** Her değişiklikten önce `sudo haproxy -c -f /etc/haproxy/haproxy.cfg` komutu ile sözdizimi kontrolü yapın. Hatalı bir config servisi durdurabilir.
-2. **`reload` vs `restart`:** `reload`, aktif bağlantıları kesmeden yeni yapılandırmayı yükler. Production ortamında her zaman `restart` yerine `reload` tercih edin.
+2. **`reload` vs `restart`:** `reload`, aktif bağlantıları kesmeden yeni yapılandırmayı yükler. Production ortamında tercih edin. Ancak major sürüm güncellemelerinden sonra yeni binary'nin devreye girmesi için `restart` gerekebilir.
 3. **`502 Bad Gateway` Hatası:** Backend sunucunun çalıştığını ve HAProxy'nin ona ağ üzerinden erişebildiğini doğrulayın. `curl -v http://BACKEND_IP:80` ile bağlantı testi yapabilirsiniz.
 4. **Oturum Sürekliliği (Session Persistence):** Kullanıcı oturumlarının hep aynı sunucuya gitmesi gerekiyorsa (örn. oturum bilgisi sunucuda tutuluyorsa), backend bloğuna `cookie SERVERID insert indirect nocache` satırını ekleyin.
 5. **`/health` Endpoint:** Sağlık kontrolünün çalışması için backend uygulamalarınızda `GET /health` isteğine `200 OK` dönen bir endpoint bulunmalıdır.

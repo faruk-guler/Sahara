@@ -94,15 +94,15 @@ sudo chown proxy:proxy /etc/squid/passwd
 sudo chmod 640 /etc/squid/passwd
 ```
 
-#### 4.2 `squid.conf` Dosyasına Auth Kurallarını Ekleme
+#### 4.2 `squid.conf` dosyasına Auth kurallarını ekleme
 
-Tüm `http_access allow ...` satırlarını ekledikten sonra, dosyanın en altındaki `http_access deny all` kuralından **ÖNCE** şunları ekleyin:
+`auth_param` blokları ile ACL tanımlamaları `http_access allow/deny` satırlarından **ÖNCE** gelmelidir (Squid yapılandırmayı yukarıdan aşağıya okur; ACL tanımlanmadan kullanılamaz). Dosyayı açın ve mevcut `http_access` kurallarının **ÜSTÜNE** ekleyin:
 
 ```text
 # Basic Auth Yardımcı Program Tanımı
 auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
 auth_param basic children 5
-auth_param basic realm Squid Proxy Sunucusuna Hos Geldiniz
+auth_param basic realm Squid Proxy Sunucusuna Hoş Geldiniz
 auth_param basic credentialsttl 2 hours
 auth_param basic casesensitive on
 
@@ -148,6 +148,8 @@ request_header_access All deny all
 > 💡 **Not:** `forwarded_for off` zaten `X-Forwarded-For` başlığının eklenmesini engeller; `request_header_access` satırı buna ek bir güvenlik katmanı olarak eklenmiştir (redundant ama zararsız).
 >
 > ⚠️ **Uyarı:** `request_header_access` gibi HTTP standardını "ihlal eden" (violation) directive'ler Squid'in `--enable-http-violations` derleme bayrağı ile aktif olur. Debian'ın resmi paketi bunu varsayılan olarak destekler, ancak yine de değişiklikten sonra parse kontrolü şart:
+>
+> 🔎 **Elite Proxy + Basic Auth (Önemli):** `Proxy-Authorization` başlığının `allow all` ile korunduğundan emin olun (yukarıdaki config'de mevcut). Bunu engellerseniz Squid kimlik doğrulaması tamamen durur. Her değişiklik sonrası `sudo squid -k parse` ile kontrol edin.
 
 ```bash
 sudo squid -k parse && sudo systemctl restart squid
@@ -190,24 +192,21 @@ sudo squid -k parse && sudo systemctl reload squid
 
 ---
 
-### Adım 7: HTTPS Trafiğini Filtreleme (SSL Bump)
+### Adım 7: HTTPS Trafiğini Filtreleme (CONNECT Filtreleme & SSL Bump)
 
 Squid, varsayılan olarak HTTPS trafiğini sadece tünelleyip (`CONNECT`) içeriğine bakamaz. Domain bazlı engellemeyi HTTPS'e taşımak için iki yöntem vardır:
 
-#### 7.1 Hafif Yöntem — SNI Bazlı Filtreleme (Önerilen, MITM Yok)
+#### 7.1 Hafif Yöntem — CONNECT İsteğinden Domain Filtreleme (Sertifika Gerekmez)
 
-Sertifikayı hiç açmadan, istemcinin gönderdiği SNI (Server Name Indication) bilgisinden domain okuyup engelleme yapılır. İstemcilere sertifika dağıtmaya gerek yoktur:
+Forward proxy modunda Squid, istemcinin gönderdiği `CONNECT` isteğindeki domain adını doğrudan okuyabilir. Bu yöntem TLS sertifikası gerektirmez ve çoğu senaryoda yeterlidir:
 
 ```text
-acl blocked_sni ssl::server_name "/etc/squid/blocked_sites.txt"
-
-http_port 3128 ssl-bump
-acl step1 at_step SslBump1
-ssl_bump peek step1
-ssl_bump splice all
-
-http_access deny blocked_sni
+# CONNECT isteğinden domain'i oku (HTTP ve HTTPS için çalışır)
+acl blocked_https_domains dstdomain "/etc/squid/blocked_sites.txt"
+http_access deny blocked_https_domains
 ```
+
+> 💡 **Not:** Adım 6'daki `dstdomain` kuralı HTTPS `CONNECT` hedeflerini zaten kapsar. Bu bölümü **ayrıca** eklemenize gerek yoktur; yalnızca Adım 6'yı kullanmadıysanız veya farklı bir ACL adıyla organize etmek istiyorsanız referans amaçlıdır.
 
 #### 7.2 Tam Yöntem — SSL Bump (MITM, İleri Seviye)
 
@@ -217,12 +216,19 @@ Trafiğin içeriğini (URL path, sayfa içeriği) görmek için Squid'in araya g
 # Kök sertifika (CA) oluşturma
 sudo mkdir -p /etc/squid/ssl_cert
 cd /etc/squid/ssl_cert
-sudo openssl req -new -newkey rsa:2048 -sha256 -days 3650 -nodes -x509 \
-  -keyout squidCA.pem -out squidCA.pem \
-  -subj "/C=TR/O=SirketAdi/CN=Squid Proxy CA"
-sudo openssl x509 -in squidCA.pem -outform DER -out squidCA.der
 
-# Sertifika önbellek veritabanı (sslcrtd)
+# Özel anahtar ve sertifikayı ayrı dosyalar olarak oluşturun
+sudo openssl req -new -newkey rsa:2048 -sha256 -days 3650 -nodes -x509 \
+  -keyout squidCA.key -out squidCA.crt \
+  -subj "/C=TR/O=SirketAdi/CN=Squid Proxy CA"
+
+# İzin kısıtlaması (anahtar dosyası sadece root okuyabilmeli)
+sudo chmod 600 squidCA.key
+
+# DER formatı (istemcilere dağıtmak için)
+sudo openssl x509 -in squidCA.crt -outform DER -out squidCA.der
+
+# Sertifika önbelleği veritabanı (sslcrtd)
 sudo /usr/lib/squid/security_file_certgen -c -s /var/spool/squid/ssl_db -M 4MB
 sudo chown -R proxy:proxy /var/spool/squid/ssl_db
 ```
@@ -230,11 +236,16 @@ sudo chown -R proxy:proxy /var/spool/squid/ssl_db
 `squid.conf` içine:
 
 ```text
-http_port 3128 ssl-bump cert=/etc/squid/ssl_cert/squidCA.pem generate-host-certificates=on
+# Adım 2'deki temel http_port satırını aşağıdaki ile DEĞİŞTİRİN
+# (Aynı portu iki kez tanımlamayın! squid.conf backslash ile satır devamı desteklemez, tek satırda yazın.)
+http_port 3128 ssl-bump cert=/etc/squid/ssl_cert/squidCA.crt key=/etc/squid/ssl_cert/squidCA.key generate-host-certificates=on dynamic_cert_mem_cache_size=4MB
+
 sslcrtd_program /usr/lib/squid/security_file_certgen -s /var/spool/squid/ssl_db -M 4MB
 
 acl step1 at_step SslBump1
 ssl_bump peek step1
+# Not: 'blocked_domains' ACL'i Adım 6'da tanımlanmıştır.
+# Adım 6'yı atladıysanız önce şunu ekleyin: acl blocked_domains dstdomain "/etc/squid/blocked_sites.txt"
 ssl_bump bump blocked_domains
 ssl_bump splice all
 ```
@@ -253,7 +264,7 @@ sudo squid -k parse && sudo systemctl restart squid
 >
 > - Sertifika pinning kullanan uygulamaları (bankacılık, bazı mobil uygulamalar) kırar.
 > - KVKK/GDPR kapsamında çalışan/kullanıcı bilgilendirmesi ve genelde yazılı onay gerektirir — sadece teknik bir adım değil, bir politika kararıdır.
-> - Kurumsal olmayan (ev/kişisel) kullanımda genelde gereksizdir; çoğu senaryoda 7.1'deki SNI yöntemi yeterlidir.
+> - Kurumsal olmayan (ev/kişisel) kullanımda genelde gereksizdir; çoğu senaryoda Adım 6'daki `dstdomain` yöntemi yeterlidir.
 
 ---
 
@@ -263,6 +274,8 @@ Squid'in temel işlevlerinden biri caching'dir, ancak varsayılan kurulumda disk
 
 ```text
 # RAM cache (sık erişilen küçük objeler için)
+# Öneri: cache_mem değeri toplam RAM'in %25'ini geçmemeli.
+# Örneğin 1 GB RAM'li bir sunucuda 256 MB, 4 GB RAM için 512-1024 MB uygundur.
 cache_mem 256 MB
 maximum_object_size_in_memory 512 KB
 
@@ -452,7 +465,7 @@ Basic Auth kullanıyorsanız:
 Acquire::http::Proxy "http://ahmet_kullanicisi:SIFRENIZ@SUNUCU_IP_ADRESI:3128";
 ```
 
-> 💡 **İpucu:** Debian 13'ün kendi güncellemelerini bu Squid üzerinden geçirmek istiyorsanız, `archive.debian.org` ve `security.debian.org` gibi adreslerin proxy `http_access` kurallarınızda (Adım 3/6) engellenmediğinden emin olun.
+> 💡 **İpucu:** Debian 13'ün kendi güncellemelerini bu Squid üzerinden geçirmek istiyorsanız, `deb.debian.org` ve `security.debian.org` gibi adreslerin proxy `http_access` kurallarınızda (Adım 3/6) engellenmediğinden emin olun.
 
 **C) Git için Proxy**
 
@@ -492,7 +505,7 @@ sudo systemctl restart docker
 apt-config dump | grep -i proxy
 
 # genel bağlantı testi
-curl -x $http_proxy https://ifconfig.me
+curl -x "${http_proxy}" https://ifconfig.me
 ```
 
 ---
@@ -513,7 +526,9 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=strict
-ReadWritePaths=/var/spool/squid /var/log/squid /var/run
+# Squid'in yazması gereken tüm dizinleri ekleyin; 
+# eksik bir dizin servisi sessizce çökertebilir.
+ReadWritePaths=/var/spool/squid /var/log/squid /var/run /run /etc/squid
 ```
 
 ```bash
@@ -565,6 +580,21 @@ Trafiğiniz yoğunsa `rotate` sayısını artırıp `daily` yapabilirsiniz; disk
 
 ---
 
+### Adım 14: Güncelleme
+
+```bash
+sudo apt update
+sudo apt install --only-upgrade squid
+
+# Yapılandırmayı doğrulayın, sonra servisi yeniden yükleyin
+sudo squid -k parse && sudo systemctl reload squid
+
+# Paket güncellemesi binary değişikliği içeriyorsa restart gerekebilir
+# sudo systemctl restart squid
+```
+
+---
+
 ## 💡 Dikkat Edilmesi Gereken İpuçları & Düzeltmeler
 
 1. **`http_access` Kural Sıralaması:** `allow` kuralları mutlaka `deny all` satırından **ÖNCE** yazılmalıdır, aksi halde 403 Forbidden hatası alırsınız.
@@ -572,6 +602,7 @@ Trafiğiniz yoğunsa `rotate` sayısını artırıp `daily` yapabilirsiniz; disk
 3. **`Connection Refused` Hatası:** `sudo systemctl status squid` ile servisin çalıştığını ve sunucunuzun güvenlik duvarında (örn. UFW, iptables) 3128 portunun açık olduğunu doğrulayın.
 4. **Yapılandırma Doğrulama:** `squid.conf` üzerinde **her** değişiklikten sonra, `reload`/`restart` atmadan önce mutlaka `sudo squid -k parse` ile sözdizimi kontrolü yapın. Bu, `deny all` kuralının yanlışlıkla silinmesi gibi kritik hataları servis yeniden başlamadan önce yakalamanızı sağlar.
 5. **Cache dizini ilk kurulum hatası:** `cache_dir` tanımlayıp `squid -z` çalıştırmadan servisi başlatırsanız Squid hata verir veya cache'i kullanmaz — Adım 8'i atlamayın.
+6. **`squidclient` Kurulumu:** Adım 10'daki `squidclient` komutu Debian paketinde ayrı gelebilir; bulunamazsa şunu çalıştırın: `sudo apt install squid-common`
 
 *Tebrikler! Debian 13 üzerinde Squid Proxy kurulumunuz başarıyla tamamlanmıştır.*
 

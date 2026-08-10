@@ -61,7 +61,7 @@ services:
     restart: unless-stopped
     ports:
       - '80:80'     # HTTP Trafiği
-      - '81:81'     # Yönetim Arayüzü (Admin Panel)
+      - '127.0.0.1:81:81'  # Yönetim Arayüzü (Sadece localhost — dışarıya açmayın!)
       - '443:443'   # HTTPS Trafiği
     environment:
       DB_MYSQL_HOST: "db"
@@ -73,7 +73,8 @@ services:
       - ./data:/data
       - ./letsencrypt:/etc/letsencrypt
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - npm-network
 
@@ -90,6 +91,12 @@ services:
       - ./mysql:/var/lib/mysql
     networks:
       - npm-network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   npm-network:
@@ -98,9 +105,35 @@ networks:
 
 > ⚠️ `DB_MYSQL_PASSWORD` ve `MYSQL_PASSWORD` değerlerini kendi güçlü şifrelerinizle değiştirin. `app` servisindeki `DB_MYSQL_PASSWORD` ile `db` servisindeki `MYSQL_PASSWORD` değerleri **birbiriyle eşleşmek zorundadır.** `MYSQL_ROOT_PASSWORD` ise veritabanı yönetimi için ayrı bir root şifresidir.
 
+> 🔒 **Güvenlik — `.env` Dosyası Kullanımı:** Şifrelerinizi `docker-compose.yml` içine düz metin olarak yazmak yerine, aynı dizinde bir `.env` dosyası oluşturun ve `docker-compose.yml`'de `${DEGISKEN_ADI}` sözdizimini kullanın:
+>
+> ```bash
+> # /opt/nginx-proxy-manager/.env
+> MYSQL_ROOT_PASSWORD=guclu_root_sifreniz
+> MYSQL_PASSWORD=guclu_npm_sifreniz
+> ```
+>
+> Ardından `docker-compose.yml` içinde:
+>
+> ```yaml
+> MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+> MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+> DB_MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+> ```
+>
+> `.env` dosyasını mutlaka `.gitignore`'a ekleyin; aksi halde şifreler versiyon kontrolüne sızar.
+
 #### Seçenek B: SQLite ile (Hafif Sistemler İçin)
 
-RAM kaynağınız kısıtlıysa (512MB - 1GB RAM'li küçük bir VPS), dahili SQLite veritabanını kullanabilirsiniz:
+RAM kaynağınız kısıtlıysa (512MB - 1GB RAM'li küçük bir VPS), dahili SQLite veritabanını kullanabilirsiniz.
+
+> ⚠️ **SQLite Kısıtlamaları:**
+>
+> - **Yüksek eşzamanlı** erişimde write-lock sorunları yaşanabilir; yoğun trafikli ortamlar için MariaDB tercih edin.
+> - SQLite ile MariaDB arasında **geçiş yapılamaz** — kurulumun başında tercih edilmeli.
+> - **Yedekleme:** `data/database.sqlite` tek dosyasını kopyalamak yeterlidir (MariaDB'nin tersine `mysqldump` gerekmez).
+
+SQLite yapılandırması:
 
 ```yaml
 services:
@@ -110,7 +143,7 @@ services:
     restart: unless-stopped
     ports:
       - '80:80'
-      - '81:81'
+      - '127.0.0.1:81:81'  # Yönetim Arayüzü (Sadece localhost)
       - '443:443'
     volumes:
       - ./data:/data
@@ -138,12 +171,20 @@ Her şey yolundaysa `nginx-proxy-manager` ve `npm-db` konteynerlerinin durumu **
 
 ### Adım 5: İlk Giriş ve Güvenlik Ayarları
 
-1. Tarayıcınızdan `http://SUNUCU_IP_ADRESINIZ:81` adresine gidin.
-2. **Varsayılan Giriş Bilgileri:**
+Port 81 sadece localhost'a bağlı olduğundan, yönetim paneline erişmek için:
+
+- **Sunucu üzerindeyseniz:** Tarayıcıdan `http://localhost:81` adresine gidin.
+- **Uzaktan bağlanıyorsanız:** Önce SSH tüneli açın, ardından yerel tarayıcınızdan `http://localhost:8181` ile bağlanın:
+
+  ```bash
+  ssh -L 8181:127.0.0.1:81 kullanici@SUNUCU_IP_ADRESI
+  ```
+
+1. **Varsayılan Giriş Bilgileri:**
    - **Email:** `admin@example.com`
    - **Password:** `changeme`
-3. İlk giriş sonrası sizden **Ad / Soyad** ve **E-posta** bilgilerinizi güncellemeniz istenecektir.
-4. Varsayılan `changeme` şifresini **güçlü yeni bir şifre** ile değiştirin.
+2. İlk giriş sonrası sizden **Ad / Soyad** ve **E-posta** bilgilerinizi güncellemeniz istenecektir.
+3. Varsayılan `changeme` şifresini **güçlü yeni bir şifre** ile değiştirin.
 
 ---
 
@@ -181,6 +222,8 @@ Proxy Host ekleme penceresinde **SSL** sekmesine geçin:
 
 NPM, arka planda Let's Encrypt ile haberleşerek SSL sertifikasını saniyeler içinde alacak ve otomatik yenilemeyi ayarlayacaktır.
 
+> 💡 **Let's Encrypt Hız Limiti:** Let's Encrypt, aynı domain için hatalı denemelerden sonra haftalık sertifika limiti uygular. İlk kurulumda test amacıyla **Staging (Test) modunu** kullanmanız önerilir; sertifika başarıyla alındıktan sonra gerçek sertifikaya geçin. Staging sertifikaları tarayıcılar tarafından güvenilmez görülecektir, ancak konfigürasyonu test etmek için idealdir.
+
 ---
 
 ### Adım 8: Erişim Kısıtlama (Access Lists)
@@ -208,11 +251,14 @@ Kullandığınız güvenlik duvarı çözümünde (UFW, iptables, FortiGate, pfS
 | **80** | TCP | HTTP Trafiği & SSL Doğrulama |
 | **443** | TCP | HTTPS Trafiği |
 
-> ⚠️ **Port 81 (Yönetim Paneli):**  
-> Port 81'i dış dünyaya açmayın. Yönetim paneline erişmek için:
+> 💡 **Port 81 (Yönetim Paneli):**  
+> Adım 3'teki yapılandırmada port 81 zaten `127.0.0.1:81:81` olarak sadece localhost'a bağlı tutulmuştur. Uzaktan erişim için SSH tüneli kullanın:
 >
-> 1. `docker-compose.yml` içinde port ayarını `- '127.0.0.1:81:81'` yapıp SSH Tüneli ile bağlanın.
-> 2. Veya NPM üzerinden kendi port 81'ine yönlenen bir Proxy Host oluşturup, **Access Lists** ile IP kısıtlaması uygulayın.
+> ```bash
+> ssh -L 8181:127.0.0.1:81 kullanici@SUNUCU_IP_ADRESI
+> ```
+>
+> Ardından yerel tarayıcınızdan `http://localhost:8181` ile bağlanın.
 
 #### 9.2 Docker Ortak Ağ (Custom Docker Network) Kullanımı
 
@@ -258,16 +304,21 @@ docker image prune -f
 #### 10.2 Manuel Yedekleme
 
 ```bash
-# Konteynerleri durdurun (Veri tutarlılığı için)
+# 1. Önce veritabanını dışa aktarın (konteyner çalışırken)
 cd /opt/nginx-proxy-manager
-docker compose down
+docker compose exec db mariadb-dump -u root --password="ROOT_SIFRENIZ" npm > npm_db_yedek_$(date +%F).sql
+# Alternatif (şifreyi komut geçmişinde göstermemek için):
+# docker compose exec -e MYSQL_PWD="ROOT_SIFRENIZ" db mariadb-dump -u root npm > npm_db_yedek_$(date +%F).sql
 
-# Klasörü arşivleyin (data/, letsencrypt/ ve mysql/ dahil tüm veriler)
+# 2. Konteynerler durdurun ve dosya sistemini yedekleyin
+docker compose down
 tar -czvf npm_yedek_$(date +%F).tar.gz /opt/nginx-proxy-manager
 
-# Konteynerleri tekrar başlatın
+# 3. Konteynerleri tekrar başlatın
 docker compose up -d
 ```
+
+> 💡 **Not:** MariaDB binary dosyalarını (`mysql/` dizini) çalışır durumdaki bir konteynerde `tar` ile yedeklemek veri tutarsızlığına yol açabilir. `mariadb-dump` ile önce SQL dökümü alın, ardından container durdurulup tam yedek yapılır.
 
 ---
 
